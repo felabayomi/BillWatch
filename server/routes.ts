@@ -19,7 +19,7 @@ import { syncPaidBillToFinanceWatch, syncMultipleBillsToFinanceWatch } from "./f
 import { stripePayoutService } from "./stripePayouts";
 import { billReminderService } from "./billReminderService";
 import { reminderScheduler } from "./reminderScheduler";
-import { verifyMembershipCached, getTierForTool } from "./membership";
+import { verifyMembershipCached, getTierForTool, getMembershipPortalUrl } from "./membership";
 import multer from "multer";
 import { z } from "zod";
 import Stripe from "stripe";
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({
           hasAccess: false,
           reason: "no_email",
-          redirectUrl: "https://felixpay.net/membership",
+          redirectUrl: getMembershipPortalUrl(),
         });
       }
 
@@ -447,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reason: result.active ? "wrong_tier" : (result.status === "no_account" ? "no_subscription" : "expired"),
           tier: result.tier,
           requiredTier: getTierForTool(),
-          redirectUrl: "https://felixpay.net/membership",
+          redirectUrl: getMembershipPortalUrl(),
         });
       }
 
@@ -462,7 +462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         hasAccess: false,
         reason: "error",
-        redirectUrl: "https://felixpay.net/membership",
+        redirectUrl: getMembershipPortalUrl(),
       });
     }
   });

@@ -1,4 +1,4 @@
-const FELIX_PAY_URL = "https://felixpay.net";
+const MEMBERSHIP_API_URL = (process.env.MEMBERSHIP_API_URL || "https://felixpay.net").replace(/\/$/, "");
 const TOOL_NAME = "BillWatch";
 
 const ADMIN_EMAILS = [
@@ -40,7 +40,7 @@ async function verifyMembership(email: string): Promise<MembershipVerifyResponse
     throw new Error("MEMBERSHIP_VERIFY_API_KEY not configured");
   }
 
-  const url = `${FELIX_PAY_URL}/api/membership/verify?email=${encodeURIComponent(email)}&tool=${encodeURIComponent(TOOL_NAME)}`;
+  const url = `${MEMBERSHIP_API_URL}/api/membership/verify?email=${encodeURIComponent(email)}&tool=${encodeURIComponent(TOOL_NAME)}`;
 
   const response = await fetch(url, {
     method: "GET",
@@ -75,4 +75,8 @@ export function getTierForTool(): string {
   if (controlTools.includes(TOOL_NAME)) return "control";
   if (momentumTools.includes(TOOL_NAME)) return "momentum";
   return "legacy";
+}
+
+export function getMembershipPortalUrl(): string {
+  return process.env.MEMBERSHIP_PORTAL_URL || `${MEMBERSHIP_API_URL}/membership`;
 }

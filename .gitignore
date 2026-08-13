@@ -8,3 +8,6 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+.vercel
+.env*

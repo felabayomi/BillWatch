@@ -7,7 +7,8 @@ import step2Image from "@assets/generated_images/AI_extracting_data_450568c3.png
 import step3Image from "@assets/generated_images/Payment_reminder_notification_05b7afaa.png";
 import { useClerk } from "@clerk/clerk-react";
 
-const MEMBERSHIP_URL = "https://felixpay.net/membership";
+const MEMBERSHIP_PORTAL_URL = import.meta.env.VITE_MEMBERSHIP_PORTAL_URL || "https://felixpay.net/membership";
+const MEMBERSHIP_HUB_URL = import.meta.env.VITE_MEMBERSHIP_HUB_URL || new URL(MEMBERSHIP_PORTAL_URL).origin;
 
 export default function Landing() {
   const { openSignIn } = useClerk();
@@ -16,7 +17,7 @@ export default function Landing() {
   };
 
   const handleMembership = () => {
-    window.open(MEMBERSHIP_URL, "_blank", "noopener,noreferrer");
+    window.open(MEMBERSHIP_PORTAL_URL, "_blank", "noopener,noreferrer");
   };
 
   const handleBillWatchClick = () => {
@@ -403,7 +404,7 @@ export default function Landing() {
 
                 {/* Felix Pay */}
                 <a 
-                  href="https://felixpay.net/" 
+                  href={MEMBERSHIP_HUB_URL}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex flex-col items-center justify-center p-4 bg-card border border-border rounded-xl hover:shadow-md hover:border-purple-300 transition-all text-center min-h-[120px]"

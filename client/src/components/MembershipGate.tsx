@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ShieldX, ExternalLink } from "lucide-react";
 
-const FELIX_PAY_MEMBERSHIP_URL = "https://felixpay.net/membership";
+const MEMBERSHIP_PORTAL_URL = import.meta.env.VITE_MEMBERSHIP_PORTAL_URL || "https://felixpay.net/membership";
 
 interface MembershipCheckResponse {
   hasAccess: boolean;
@@ -56,7 +56,7 @@ export function MembershipGate({ children }: { children: React.ReactNode }) {
               : "Unable to verify your subscription. Please try again."}
           </p>
           <a
-            href={data?.redirectUrl || FELIX_PAY_MEMBERSHIP_URL}
+            href={data?.redirectUrl || MEMBERSHIP_PORTAL_URL}
             className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
           >
             {reason === "wrong_tier" ? "Upgrade Plan" : reason === "expired" ? "Renew Subscription" : "View Plans"}
