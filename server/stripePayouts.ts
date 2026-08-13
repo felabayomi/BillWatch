@@ -3,13 +3,14 @@
 
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-08-27.basil",
+}) : null;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
+function requireStripe(): Stripe {
+  if (!stripe) throw new Error("Stripe is not configured yet");
+  return stripe;
+}
 
 interface PayoutRecipient {
   name: string;
@@ -61,7 +62,7 @@ export class StripePayoutService {
       }
       
       // Create a Connect Express account for the recipient
-      const account = await stripe.accounts.create({
+      const account = await requireStripe().accounts.create({
         type: 'express',
         country: 'US',
         email: recipient.email,
@@ -100,7 +101,7 @@ export class StripePayoutService {
       const amountInCents = Math.round(request.amount * 100);
 
       // Create transfer to the connected account
-      const transfer = await stripe.transfers.create({
+      const transfer = await requireStripe().transfers.create({
         amount: amountInCents,
         currency: request.currency || 'usd',
         destination: request.recipientId,
@@ -133,7 +134,7 @@ export class StripePayoutService {
       const amountInCents = Math.round(request.amount * 100);
 
       // Create payout using Stripe's standard payouts API
-      const payout = await stripe.payouts.create({
+      const payout = await requireStripe().payouts.create({
         amount: amountInCents,
         currency: request.currency || 'usd',
         description: request.description,
@@ -164,7 +165,7 @@ export class StripePayoutService {
     try {
       // Try to get as transfer first
       try {
-        const transfer = await stripe.transfers.retrieve(payoutId);
+        const transfer = await requireStripe().transfers.retrieve(payoutId);
         return {
           id: transfer.id,
           amount: transfer.amount / 100,
@@ -174,7 +175,7 @@ export class StripePayoutService {
         };
       } catch {
         // If not a transfer, try as payout
-        const payout = await stripe.payouts.retrieve(payoutId);
+        const payout = await requireStripe().payouts.retrieve(payoutId);
         return {
           id: payout.id,
           amount: payout.amount / 100,
@@ -198,7 +199,7 @@ export class StripePayoutService {
       console.log('🔍 Testing Stripe Global Payouts connectivity...');
       
       // Test by getting account information
-      const account = await stripe.accounts.retrieve();
+      const account = await requireStripe().accounts.retrieve();
       console.log(`✅ Stripe account connected: ${account.id}`);
       console.log(`🏢 Business name: ${account.business_profile?.name || 'Not set'}`);
       console.log(`💳 Charges enabled: ${account.charges_enabled ? 'YES' : 'NO'}`);

@@ -24,12 +24,14 @@ import multer from "multer";
 import { z } from "zod";
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
-});
+}) : null;
+
+function requireStripe(): Stripe {
+  if (!stripe) throw new Error("Stripe is not configured yet");
+  return stripe;
+}
 
 // Initialize BILL.com service
 const billComService = new BillComService();
@@ -1812,7 +1814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const amountInCents = Math.round(parseFloat(amount) * 100);
 
       // Create checkout session  
-      const session = await stripe.checkout.sessions.create({
+      const session = await requireStripe().checkout.sessions.create({
         payment_method_types: ['card', 'us_bank_account'],
         line_items: [
           {
@@ -1862,7 +1864,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Retrieve the checkout session to verify it was successful
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
+      const session = await requireStripe().checkout.sessions.retrieve(sessionId);
 
       console.log('=== STRIPE SESSION DEBUG ===');
       console.log('Session ID:', sessionId);
@@ -2059,7 +2061,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       
       // Create setup intent for saving payment methods
-      const setupIntent = await stripe.setupIntents.create({
+      const setupIntent = await requireStripe().setupIntents.create({
         customer: undefined, // You might want to create/retrieve Stripe customers
         payment_method_types: ['card', 'us_bank_account'],
         metadata: {
