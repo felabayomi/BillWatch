@@ -3,7 +3,7 @@ import type { Express, Request, RequestHandler } from "express";
 import { eq } from "drizzle-orm";
 import { db } from "./db.js";
 import { storage } from "./storage.js";
-import { users } from "@shared/schema";
+import { users } from "../shared/schema.js";
 
 async function hydrateBillWatchUser(req: Request): Promise<any | null> {
   const auth = getAuth(req);

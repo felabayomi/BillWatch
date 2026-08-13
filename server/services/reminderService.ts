@@ -1,5 +1,5 @@
 import { storage } from "../storage.js";
-import type { InsertReminder } from "@shared/schema";
+import type { InsertReminder } from "../../shared/schema.js";
 
 export class ReminderService {
   async createDefaultReminders(billId: string, dueDate: Date): Promise<void> {

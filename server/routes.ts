@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, loadAuthenticatedUser } from "./auth.js";
 import { emailService } from "./emailService.js";
-import { insertBillSchema, updateBillSchema, updatePaymentSchema, insertReminderSchema, insertConversationSchema, insertBillPaymentSchema, updateBillPaymentSchema, users } from "@shared/schema";
+import { insertBillSchema, updateBillSchema, updatePaymentSchema, insertReminderSchema, insertConversationSchema, insertBillPaymentSchema, updateBillPaymentSchema, users } from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq } from "drizzle-orm";
 import { ObjectStorageService, objectStorageClient, parseObjectPath } from "./objectStorage.js";

@@ -1,5 +1,5 @@
 import { db } from './db.js';
-import { bills, users, accounts } from '@shared/schema';
+import { bills, users, accounts } from '../shared/schema.js';
 import { eq } from 'drizzle-orm';
 
 function getApiUrl(): string {

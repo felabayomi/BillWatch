@@ -20,7 +20,7 @@ import {
   type UpdateBillPayment,
   type Account,
   type InsertAccount
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq, and, desc, asc, gte, lte, lt, gt, isNull, or, ne, not, sum } from "drizzle-orm";
 

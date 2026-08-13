@@ -1,5 +1,5 @@
 import { db } from "../db.js";
-import { bills } from "@shared/schema";
+import { bills } from "../../shared/schema.js";
 import { eq, and, ne, sql } from "drizzle-orm";
 
 export interface CategoryAggregation {

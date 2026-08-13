@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "../storage.js";
-import { Bill } from "@shared/schema";
+import { Bill } from "../../shared/schema.js";
 import { format, addDays, startOfDay } from "date-fns";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
