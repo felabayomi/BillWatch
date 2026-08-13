@@ -3,7 +3,9 @@ import { storage } from "../storage.js";
 import { Bill } from "../../shared/schema.js";
 import { format, addDays, startOfDay } from "date-fns";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+  : null;
 
 interface FelixResponse {
   response: string;
@@ -44,6 +46,8 @@ When answering questions:
 Current date: ${format(new Date(), 'yyyy-MM-dd')}
 
 Respond naturally and helpfully with the actual bill information.`;
+
+      if (!openai) throw new Error("OpenAI is not configured yet");
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",

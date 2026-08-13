@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || "default_key" 
-});
+const openaiApiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
 export interface ParsedBillInfo {
   company: string | null;
@@ -85,6 +84,8 @@ export class AIParserService {
       }
       
       // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      if (!openai) throw new Error("OpenAI is not configured yet");
+
       const response = await openai.chat.completions.create({
         model: "gpt-5",
         messages: [
