@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express, { type Request, type Response, type NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
-import { setupVite, serveStatic, log } from "./vite.js";
+import { serveStatic, log } from "./runtime.js";
 
 const app = express();
 app.use(express.json());
@@ -35,6 +35,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 if (app.get("env") === "development" && !process.env.VERCEL) {
+  const { setupVite } = await import("./vite.js");
   await setupVite(app, server);
 } else {
   serveStatic(app);
