@@ -1,8 +1,8 @@
 import { clerkClient, clerkMiddleware, getAuth } from "@clerk/express";
 import type { Express, Request, RequestHandler } from "express";
 import { eq } from "drizzle-orm";
-import { db } from "./db";
-import { storage } from "./storage";
+import { db } from "./db.js";
+import { storage } from "./storage.js";
 import { users } from "@shared/schema";
 
 async function hydrateBillWatchUser(req: Request): Promise<any | null> {

@@ -1,7 +1,7 @@
-import { db } from "../db";
+import { db } from "../db.js";
 import { bills } from "@shared/schema";
 import { eq, isNull, or, and } from "drizzle-orm";
-import { AIParserService } from "./aiParser";
+import { AIParserService } from "./aiParser.js";
 
 export class RecategorizationService {
   private aiParser = new AIParserService();

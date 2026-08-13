@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { storage } from "../storage";
+import { storage } from "../storage.js";
 import { Bill } from "@shared/schema";
 import { format, addDays, startOfDay } from "date-fns";
 

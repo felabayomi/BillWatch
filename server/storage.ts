@@ -21,7 +21,7 @@ import {
   type Account,
   type InsertAccount
 } from "@shared/schema";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, and, desc, asc, gte, lte, lt, gt, isNull, or, ne, not, sum } from "drizzle-orm";
 
 export interface IStorage {

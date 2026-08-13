@@ -1,4 +1,4 @@
-import { billReminderService } from "./billReminderService";
+import { billReminderService } from "./billReminderService.js";
 
 export class ReminderScheduler {
   private intervalId: NodeJS.Timeout | null = null;

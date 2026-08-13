@@ -7,7 +7,7 @@ import {
   canAccessObject,
   getObjectAclPolicy,
   setObjectAclPolicy,
-} from "./objectAcl";
+} from "./objectAcl.js";
 
 const storageCredentials = process.env.GCS_CLIENT_EMAIL && process.env.GCS_PRIVATE_KEY
   ? {

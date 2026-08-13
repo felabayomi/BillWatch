@@ -1,5 +1,5 @@
-import { storage } from "./storage";
-import { emailService } from "./emailService";
+import { storage } from "./storage.js";
+import { emailService } from "./emailService.js";
 
 interface Bill {
   id: string;
