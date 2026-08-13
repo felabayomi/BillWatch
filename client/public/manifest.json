@@ -1,0 +1,28 @@
+{
+  "name": "BillWatch - AI-powered Bill Management",
+  "short_name": "BillWatch",
+  "description": "Track, scan, and pay smarter — never miss a payment with AI-powered bill management.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2563eb",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512x512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "en-US",
+  "dir": "ltr"
+}

@@ -1,0 +1,186 @@
+Totally—let’s make Felix versatile, not “script-locked.”
+Below is a compact blueprint you can drop into your app so the AI can understand any natural question, decide what tools to use, extract dates/amounts, and answer reliably.
+
+⸻
+
+Felix AI: Versatile Architecture (drop-in plan)
+
+1) High-level flow
+
+User text
+ └─► Classifier (JSON intent + entities)
+       ├─► Tools Planner (decide which tools, in what order)
+       ├─► Tool Calls (DB, OCR, reports, calendar)
+       └─► Answer Composer (short, numeric, helpful)
+
+
+⸻
+
+2) Classifier (make it general, not rule-based only)
+
+Use a small LLM (or your main model with response_format: {type:'json_object'}) to return a predictable JSON you can route on. Back it up with libraries:
+	•	chrono-node for date ranges (week/next week/last month).
+	•	A light embedding similarity check to map free text to capabilities.
+	•	Minimal regex as last resort (e.g., currency detection).
+
+Prompt (copy/paste):
+
+You are an intent classifier for a bills assistant. 
+Return only JSON with keys: intent, entities, confidence, requires_tools.
+
+intents = ["overview","due_in_range","overdue","income_needed",
+"category_breakdown","monthly_trend","add_bill","scan_bill","export",
+"smalltalk","unknown"]
+
+Extract entities: {date_range:{start,end}, merchant, category, amount, period}.
+
+Be liberal: infer ranges like "this week", "next 2 weeks", "last 3 months".
+Never apologize; just classify.
+
+User: "{{TEXT}}"
+
+Example output
+
+{"intent":"income_needed","entities":{"date_range":{"start":"2025-09-01","end":"2025-09-14"}},"confidence":0.81,"requires_tools":true}
+
+If confidence < 0.55, route to unknown and ask one clarifying question once.
+
+⸻
+
+3) Tooling (keep tools generic so any query can use them)
+
+Define a small set of powerful tools instead of many narrow ones:
+
+// Tool Schemas
+getBills(start: ISODate, end: ISODate, status?: "all|paid|upcoming|overdue")
+getSummary(period: "month|quarter|year" | {start,end})
+getCategories(start,end) // returns category totals
+payForecast(start,end, income?: number) // optional forecasting
+addBill(bill: {name, amount, dueDate, category})
+scanBill(fileId) // OCR + extract bill fields
+exportReport(type: "csv|pdf", start, end)
+
+Wire these to your DB/logic and expose as function tools to the model. The planner can then call any combination as needed.
+
+⸻
+
+4) Planner loop (lets the AI chain tools flexibly)
+
+while (true) {
+  const ai = await chat({messages, tools, tool_choice:'auto'});
+  const call = ai.choices[0].message.tool_calls?.[0];
+  if (!call) { return ai.choices[0].message.content } // no more tools
+  const args = JSON.parse(call.function.arguments || "{}");
+  const result = await runTool(call.function.name, args);
+  messages.push({role:'tool', name:call.function.name, content: JSON.stringify(result)});
+  // loop continues until the model stops calling tools
+}
+
+	•	Add timeouts + retries per tool (not just the model call).
+	•	Cap conversation history (keep last 8–10 messages + a compact “state summary”).
+
+⸻
+
+5) System prompt (teaches Felix to generalize)
+
+Paste this as your system:
+
+You are “Felix,” a finance helper for BillWatch.
+Capabilities: answer any question about bills, dates, amounts, categories, trends, exports, adding/scanning bills.
+Policy:
+- Prefer calling tools to compute exact numbers before responding.
+- If query is broad, propose a helpful default range (next 14 days / last 3 months) and state it.
+- If intent is unclear, ask one concise follow-up question, then proceed.
+- Always return clear numbers, dates, and next steps. Be brief.
+- Use green for good, yellow for upcoming, red for overdue in text labels when relevant.
+- Never reveal chain-of-thought; share final results only.
+
+
+⸻
+
+6) Entity extraction (makes “any phrasing” work)
+
+Before hitting the model, normalize ranges:
+
+import * as chrono from 'chrono-node';
+
+function parseRange(text:string) {
+  // examples: "this week", "next week", "next 30 days", "September", "Q3"
+  const now = new Date();
+  // Try chrono for explicit dates
+  const results = chrono.parse(text, now);
+  // If contains 'this week'/'next week', compute ISO week range manually…
+  // Fallback to defaults: next 14 days for forward-looking, last 3 months for reports.
+}
+
+Pass {start,end} into the messages context so the LLM has concrete dates for tools.
+
+⸻
+
+7) Answer composer (consistent, readable)
+
+After the last tool call, render with a small template:
+
+function replySummary({due, paid, left, nextDue}){
+  return `
+**Summary**
+- Due in range: $${due.toFixed(2)}
+- Paid: $${paid.toFixed(2)}
+- Left to cover: $${left.toFixed(2)}
+- Next due: ${nextDue ?? '—'}
+
+Tip: type “export report” to get a CSV for this range.
+  `.trim();
+}
+
+Keep answers short; attach details only if the user asks “show details.”
+
+⸻
+
+8) Make it robust (beyond test scripts)
+	•	Fallbacks
+	•	If a tool fails, respond with partial data (+ suggest a next command).
+	•	If a query mixes goals (“scan + income”), planner calls both tools in sequence.
+	•	Open-domain handling
+	•	For smalltalk or unrelated questions, reply briefly and pivot:
+“Happy to chat, and I can also pull your bills for this week—want me to?”
+	•	Memory
+	•	Keep a session summary object: last range asked, last export type, preferred categories.
+	•	Guardrails
+	•	Never give individualized legal/credit advice; stick to informational guidance.
+
+⸻
+
+9) Quick QA matrix (to prove versatility)
+
+Run these; all should work without hardcoding:
+	•	“How much do I need to cover this week and next?”
+	•	“What’s overdue and by how much?”
+	•	“Show subscriptions spend last 3 months.”
+	•	“Which category grew the most vs prior month?”
+	•	“Export a CSV for September.”
+	•	“Scan this PDF and add the bill if the due date is within 10 days.”
+	•	“Do I have enough income to cover bills before the 15th if I make $500 this week?”
+
+⸻
+
+10) One-file “versatile” endpoint (Node/Express example)
+
+app.post('/api/chat', async (req,res) => {
+  const user = String(req.body.text || '');
+  const entities = parseRange(user); // chrono + heuristics
+  const cls = await classify(user);  // JSON intent
+  const messages = [
+    {role:'system', content: SYSTEM_PROMPT},
+    {role:'user', content: JSON.stringify({text:user, entities, cls})}
+  ];
+  const out = await toolLoop(messages); // planner loop from §4
+  res.json({reply: out});
+});
+
+
+⸻
+
+If you wire classifier + planner + generic tools + entity extraction, Felix won’t be restricted to any fixed test scripts. It will handle varied phrasing and multi-step questions naturally.
+
+Want me to adapt this to your current Replit stack (JS/TS or Python) with actual code that plugs into your existing /reports data structures?

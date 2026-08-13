@@ -1,0 +1,28 @@
+You need to create an account tab for users to create and named the account they receiving or depositing money into. Include in a form and see example how the api pulls account from Finance watch and you can chose to add or remove . For account matching. This is guidance - How Account Matching Works:
+
+When any of the three apps sends a transaction to FinanceWatch, it includes an accountName field. FinanceWatch then tries to match it in this order:
+
+Exact match - If the account name sent matches exactly (case-insensitive), it uses that account
+Partial match (contains) - If a FinanceWatch account name contains the sent name (e.g., sending "Chase" would match "Chase Felix 8915")
+Reverse partial match - If the sent name contains a FinanceWatch account name
+Fallback - If no match is found, it defaults to the user's first checking or savings account
+What the trio apps need to do:
+
+The /api/sync/accounts endpoint already shares the user's full account list. Each app can call:
+
+GET https://financewatch.app/api/sync/accounts?email=user@example.com with the API key header
+This returns all accounts with their names and types. The trio apps can use this to show users a dropdown of their FinanceWatch accounts when creating transactions, or at minimum advise users to name accounts exactly as they appear in FinanceWatch.
+
+The fields each app should send:
+
+For ExpenseWatch (POST /api/sync/expenses):
+
+email, amount, description, date (required)
+accountName, categoryName, isBusinessExpense, businessName, sourceApp, sourceId (optional)
+For BillWatch (POST /api/sync/bill-payments):
+
+Same fields as above, sourceApp defaults to "BillWatch"
+For IncomeLift (POST /api/sync/income):
+
+Same fields as above, sourceApp defaults to "IncomeLift"
+Key advice for users: Name your accounts in BillWatch, ExpenseWatch, and IncomeLift exactly how they're named in FinanceWatch. If the name doesn't match, the transaction will still go through but will land in the default checking/savings account.

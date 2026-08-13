@@ -1,0 +1,172 @@
+📋 Ask Felix - Bill Watch Tracker Instructions (No Code)
+Project Overview
+Build a conversational AI bill tracking app where users can communicate with "Felix" to manage bills, get reminders, and receive financial insights.
+
+1. Project Foundation
+Tell the agent to create:
+
+A web application for bill tracking and management
+An AI assistant named "Felix" that users can chat with
+User authentication system with simple login
+Database for storing user bills and conversation history
+Notification system for bill reminders
+Technology Stack to Request:
+
+Web framework of agent's choice (React, Next.js, or similar)
+PostgreSQL database using Replit's built-in database
+AI integration using OpenAI or Perplexity API
+SMS notifications using Twilio
+Email notifications capability
+2. Database Structure Requirements
+Tell the agent you need these data tables:
+
+Users Table:
+
+User ID (primary key)
+Name, phone number, email address
+Account creation date
+Bills Table:
+
+Bill ID (primary key)
+User ID (foreign key)
+Bill name, amount, due date
+Payment frequency (monthly, weekly, yearly)
+Category (utilities, rent, credit cards, etc.)
+Status (pending, paid, overdue)
+Creation date
+Conversations Table:
+
+Conversation ID (primary key)
+User ID (foreign key)
+User message and AI response
+Timestamp
+Notifications Table:
+
+Notification ID (primary key)
+User ID and Bill ID (foreign keys)
+Notification type (reminder, overdue, confirmation)
+Sent date and status
+3. Core Features to Request
+Chat Interface:
+
+Real-time chat with Felix AI assistant
+Conversation history saved and displayed
+Natural language processing for bill commands
+Context-aware responses based on user's bills
+Bill Management:
+
+Add bills through conversation or forms
+Edit existing bills
+Mark bills as paid
+Delete bills
+Categorize bills automatically
+Smart Notifications:
+
+SMS reminders before due dates
+Email notifications for important updates
+Overdue bill alerts
+Payment confirmation messages
+Dashboard Features:
+
+Overview of all bills
+Upcoming payments calendar
+Spending analytics and trends
+Payment history tracking
+4. AI Assistant Capabilities
+Tell the agent Felix should handle:
+
+Understanding natural language bill commands
+Adding bills from conversational input
+Providing bill summaries and insights
+Answering questions about payment schedules
+Offering financial advice and reminders
+Helping categorize and organize bills
+Example conversations Felix should understand:
+
+"Add my electric bill for 120 dollars due on the 15th"
+"What bills do I have this week"
+"Mark my rent as paid"
+"Remind me about my credit card payment"
+"Show me my monthly expenses"
+5. User Experience Requirements
+Interface Design:
+
+Clean, mobile-friendly design
+Chat interface as primary interaction method
+Quick action buttons for common tasks
+Bill overview dashboard
+Settings for notification preferences
+Navigation:
+
+Home dashboard with bill overview
+Chat interface with Felix
+Bill management section
+Notification settings
+User profile management
+6. Security and Authentication
+User Management:
+
+Simple registration and login system
+Secure password storage
+Session management
+Data privacy protection
+User data encryption
+7. Integration Requirements
+API Integrations needed:
+
+OpenAI or Perplexity for AI conversations
+Twilio for SMS notifications
+Email service for email notifications
+Database connection for data persistence
+Environment Variables to configure:
+
+AI API key (OpenAI or Perplexity)
+Twilio account credentials
+Email service credentials
+Database connection details
+8. Notification System
+SMS Features:
+
+Bill due reminders (3 days before, day of)
+Overdue payment alerts
+Payment confirmation messages
+Two-way SMS for quick responses
+Email Features:
+
+Weekly bill summaries
+Monthly spending reports
+Important account notifications
+Bill receipt storage
+9. Advanced Features (Phase 2)
+Enhanced Intelligence:
+
+Bill pattern recognition
+Spending trend analysis
+Budget recommendations
+Automatic bill categorization
+Duplicate bill detection
+User Experience:
+
+Calendar integration
+Mobile app notifications
+Voice input capability
+Bill photo upload and OCR
+Multi-user household support
+10. Deployment Instructions
+Tell the agent to:
+
+Set up the project in Replit
+Configure the PostgreSQL database
+Set up all required API integrations
+Create proper environment variable management
+Configure the web server to run on port 5000
+Test all features thoroughly before deployment
+Testing Requirements:
+
+User registration and login flow
+Bill creation and management
+AI conversation functionality
+Notification delivery
+Database operations
+Mobile responsiveness
+This provides a complete blueprint for the agent to build Ask Felix without getting confused by code examples, focusing purely on functionality and requirements.

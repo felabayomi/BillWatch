@@ -1,0 +1,19 @@
+Failed to load resource: the server responded with a status of 401 (Unauthorized)
+
+5c96bcc6-32f3-4331-8…dev/api/auth/user:1 
+ Failed to load resource: the server responded with a status of 401 (Unauthorized)
+/oidc-login-consent/…ZL_HZB0W6yz1ZO0SM:1 The source list for the Content Security Policy directive 'default-src' contains an invalid source: ''unsafe-dynamic''. It will be ignored.
+/oidc-login-consent/…ZL_HZB0W6yz1ZO0SM:1 The Content-Security-Policy directive 'default-src' contains 'report-uri' as a source expression. Did you want to add it as a directive and forget a semicolon?
+/oidc-login-consent/…ZL_HZB0W6yz1ZO0SM:1 The source list for Content Security Policy directive 'default-src' contains a source with an invalid path: '/api/4509669501698048/security/?sentry_key=7eb3d90eb4660416caf507087367e67e'. The query component, including the '?', will be ignored.
+[Violation] Potential permissions policy violation: payment is not allowed in this document.
+[Violation] Potential permissions policy violation: payment is not allowed in this document.
+ Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.google.com') does not match the recipient window's origin ('https://replit.com').
+ Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://www.youtube.com') does not match the recipient window's origin ('https://replit.com').
+ Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('https://m.youtube.com') does not match the recipient window's origin ('https://replit.com').
+workspace_iframe.htm…%2F&id=%3Ar3g%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+analytics.google.com…=23260&tfd=276517:1 
+ Failed to load resource: net::ERR_CONNECTION_CLOSED
+(index):159 ServiceWorker registration successful: https://5c96bcc6-32f3-4331-843a-e726ad3b9cbe-00-3ji2lcpt7u2hm.worf.replit.dev/
+stallwart.build.js:1 stallwart: failed ping 1
+﻿
+

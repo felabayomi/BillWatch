@@ -1,0 +1,84 @@
+BillWatcher – Reports & Analytics Page Instructions
+
+1. Page Layout
+	•	Header (Top Bar):
+	•	Title: Reports & Analytics
+	•	Right-side action: Export button (CSV/PDF)
+	•	Filters (Dropdowns):
+	•	Time Range Selector: (Last 3 months, 6 months, Last Year, All Time)
+	•	Report Type Selector: (Overview, Monthly Trends, Category Breakdown)
+
+⸻
+
+2. Report Sections
+
+A. Overview (Default View)
+
+Show high-level summary cards:
+	•	Total Bills (sum of tracked bills in selected range)
+	•	Paid (sum of bills marked paid)
+	•	Upcoming (sum of scheduled but unpaid bills)
+	•	Overdue (sum of overdue bills)
+
+👉 Each card should use icon + color code for quick scanning:
+	•	💰 Total = Blue
+	•	✅ Paid = Green
+	•	🕒 Upcoming = Yellow/Orange
+	•	⚠️ Overdue = Red
+
+⸻
+
+B. Payment Performance
+
+Below the summary, display performance metrics:
+	•	Payment Rate (%): (Paid Bills ÷ Total Bills) × 100
+	•	Average Monthly Spend: (total ÷ number of months selected)
+	•	Total Bills Tracked: raw count
+
+👉 Style:
+	•	If payment rate < 50% → Red warning badge
+	•	If 50–80% → Yellow caution
+	•	If >80% → Green success
+
+⸻
+
+C. Monthly Trends (Graph View)
+	•	Use line chart or bar chart to show:
+	•	Bills Paid vs Bills Due per month
+	•	Add a trend line for “Average Monthly Spend”
+
+👉 Example insight:
+“Your bill payments increased by 12% over the last 6 months.”
+
+⸻
+
+D. Category Breakdown (Pie/Donut Chart)
+	•	Group bills by category (utilities, rent, credit cards, subscriptions, etc.)
+	•	Show percentage & dollar values per category
+	•	Add a legend with colors matching chart slices
+
+👉 Example insight:
+“Subscriptions make up 25% of your monthly bills.”
+
+⸻
+
+3. Export Functionality
+	•	Formats: CSV & PDF
+	•	Contents:
+	•	Bill name, due date, amount, status (paid/upcoming/overdue), category
+	•	Summary totals (same as shown on page)
+
+⸻
+
+4. UX & Styling Notes
+	•	Keep cards white with shadows on a light gray background → ensures readability.
+	•	Use consistent color coding across all views (green = success, red = urgent).
+	•	Allow tap/hover interactions on charts for more detail.
+	•	Mobile-first responsive layout (cards stack vertically on small screens).
+
+⸻
+
+5. Future Enhancements (Optional, Later)
+	•	AI-powered spending forecast (“You’ll likely spend $X on bills next month”).
+	•	Peer comparison insights (“You pay on time more often than 65% of users”).
+	•	Nudges (“Paying this bill early could improve your score”).
