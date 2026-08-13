@@ -49,7 +49,11 @@ async function hydrateBillWatchUser(req: Request): Promise<any | null> {
 
 export function setupAuth(app: Express) {
   app.set("trust proxy", 1);
-  app.use(clerkMiddleware());
+  const authorizedParties = process.env.CLERK_AUTHORIZED_PARTIES
+    ?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.use(clerkMiddleware({ authorizedParties }));
 
   // Kept for compatibility with old links. The normal UI uses Clerk directly.
   app.get("/api/login", (_req, res) => res.redirect("/"));
