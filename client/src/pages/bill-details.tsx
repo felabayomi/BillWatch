@@ -27,7 +27,7 @@ export function BillDetails() {
   const { data: customCategories = [] } = useCustomCategories(userId);
   
   if (!match || !params?.id) {
-    setLocation("/");
+    setLocation("/app");
     return null;
   }
 
@@ -163,7 +163,7 @@ export function BillDetails() {
         title: "Bill deleted",
         description: "Bill has been deleted successfully.",
       });
-      setLocation("/");
+      setLocation("/app");
     },
     onError: (error) => {
       console.error("Error deleting bill:", error);
@@ -205,7 +205,7 @@ export function BillDetails() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Bill not found</h2>
-            <Button onClick={() => setLocation("/")} data-testid="button-back-home">
+            <Button onClick={() => setLocation("/app")} data-testid="button-back-home">
               Back to Home
             </Button>
           </div>
@@ -223,7 +223,7 @@ export function BillDetails() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/app")}
               className="p-2 mr-2"
               data-testid="button-back"
             >
@@ -568,7 +568,7 @@ export function BillDetails() {
               <div className="flex space-x-3">
                 <Button
                   variant="outline"
-                  onClick={() => setLocation("/")}
+                  onClick={() => setLocation("/app")}
                   data-testid="button-back-bottom"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />

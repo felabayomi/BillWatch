@@ -13,7 +13,7 @@ const MEMBERSHIP_HUB_URL = import.meta.env.VITE_MEMBERSHIP_HUB_URL || new URL(ME
 export default function Landing() {
   const { openSignIn } = useClerk();
   const handleLogin = () => {
-    openSignIn({ redirectUrl: "/" });
+    openSignIn({ redirectUrl: "/app" });
   };
 
   const handleMembership = () => {

@@ -143,7 +143,7 @@ export default function Settings() {
   }, [darkMode]);
   
   const goToHome = () => {
-    setLocation("/");
+    setLocation("/app");
   };
   
   const handleSaveSettings = () => {
@@ -918,3 +918,4 @@ export default function Settings() {
     </Layout>
   );
 }
+

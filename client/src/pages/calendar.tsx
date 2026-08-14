@@ -72,7 +72,7 @@ export default function Calendar() {
 
   // Go back to home
   const goToHome = () => {
-    setLocation("/");
+    setLocation("/app");
   };
 
   return (
@@ -292,3 +292,4 @@ export default function Calendar() {
     </Layout>
   );
 }
+

@@ -121,7 +121,7 @@ export default function PaymentSuccess() {
   }, [toast]);
 
   const handleReturnHome = () => {
-    setLocation("/");
+    setLocation("/app");
   };
 
   const handleTriggerBillComPayment = async () => {
