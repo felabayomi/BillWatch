@@ -7,7 +7,7 @@ import step2Image from "@assets/generated_images/AI_extracting_data_450568c3.png
 import step3Image from "@assets/generated_images/Payment_reminder_notification_05b7afaa.png";
 import { useClerk } from "@clerk/clerk-react";
 
-const MEMBERSHIP_PORTAL_URL = import.meta.env.VITE_MEMBERSHIP_PORTAL_URL || "https://felixpay.net/membership";
+const MEMBERSHIP_PORTAL_URL = "https://www.felixpay.online/membership";
 const MEMBERSHIP_HUB_URL = import.meta.env.VITE_MEMBERSHIP_HUB_URL || new URL(MEMBERSHIP_PORTAL_URL).origin;
 
 export default function Landing() {
