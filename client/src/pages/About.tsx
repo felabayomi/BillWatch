@@ -160,7 +160,7 @@ export default function About() {
             <Button 
               size="lg" 
               className="w-full max-w-xs mx-auto"
-              onClick={() => window.open(import.meta.env.VITE_MEMBERSHIP_PORTAL_URL || "https://felixpay.net/membership", "_blank")}
+              onClick={() => window.open("https://www.felixpay.online/membership", "_blank")}
               data-testid="button-get-started"
             >
               Sign Up for Membership
