@@ -52,9 +52,9 @@ export function useCreatePayment() {
       queryClient.invalidateQueries({ queryKey: ["/api/bills", billId, "balance"] });
       
       // Invalidate bill-related queries to update bill status
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     },
   });
 }
@@ -75,9 +75,9 @@ export function useUpdatePayment() {
       queryClient.invalidateQueries({ queryKey: ["/api/bills", billId, "balance"] });
       
       // Invalidate bill-related queries to update bill status
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     },
   });
 }

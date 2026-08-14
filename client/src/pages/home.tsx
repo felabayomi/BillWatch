@@ -236,9 +236,9 @@ export default function Home() {
       });
       // Refresh data
       const { queryClient: qc } = await import("@/lib/queryClient");
-      qc.invalidateQueries({ queryKey: ["/api/bills"] });
-      qc.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      qc.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      qc.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      qc.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      qc.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     } catch {
       toast({
         title: "Delete failed",

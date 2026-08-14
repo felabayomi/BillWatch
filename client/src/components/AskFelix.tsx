@@ -128,8 +128,8 @@ export function AskFelix() {
       
       // Invalidate bills data if bill was created/updated
       if (response.actionTaken?.billCreated || response.actionTaken?.billUpdated) {
-        queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/bills/stats'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
+        queryClient.invalidateQueries({ queryKey: ['/api/bills/stats'], exact: false });
       }
     },
     onError: (error: any) => {

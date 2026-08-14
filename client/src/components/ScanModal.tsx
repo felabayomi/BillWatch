@@ -34,8 +34,11 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
       return await response.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
+      // Invalidate all bills queries regardless of month/year filter
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/filter"], exact: false });
       
       // Handle both single bill and recurring bill responses
       let successMessage = "";

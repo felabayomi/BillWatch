@@ -72,8 +72,8 @@ export function PaymentModal({ open, onOpenChange, bill, initialFlow = "record" 
     },
     onSuccess: (data, variables) => {
       const billId = variables.id;
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
       // Critical fix: invalidate bill-specific cache keys for immediate UI updates
       queryClient.invalidateQueries({ queryKey: ["/api/bills", billId, "balance"] });
       queryClient.invalidateQueries({ queryKey: ["/api/bills", billId, "payments"] });

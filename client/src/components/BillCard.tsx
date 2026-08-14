@@ -69,7 +69,7 @@ export function BillCard({ bill, onMarkAsPaid, onSetReminder, onPayNow, onSnooze
       return res.json();
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
       queryClient.invalidateQueries({ queryKey: ["/api/bills", bill.id] });
       const label = variables.type === "invoice" ? "Invoice" : "Receipt";
       toast({ title: `${label} uploaded`, description: `Your ${label.toLowerCase()} has been saved.` });

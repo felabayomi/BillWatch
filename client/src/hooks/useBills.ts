@@ -111,9 +111,9 @@ export function useCreateBill() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     },
   });
 }
@@ -127,9 +127,9 @@ export function useUpdateBill() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     },
   });
 }
@@ -143,9 +143,9 @@ export function useDeleteBill() {
       return await response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
     },
   });
 }
