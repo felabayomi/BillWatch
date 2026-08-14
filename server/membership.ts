@@ -1,4 +1,4 @@
-const MEMBERSHIP_API_URL = (process.env.MEMBERSHIP_API_URL || "https://felixpay.net").replace(/\/$/, "");
+const MEMBERSHIP_API_URL = (process.env.MEMBERSHIP_API_URL || "https://www.felixpay.online").replace(/\/$/, "");
 const TOOL_NAME = "BillWatch";
 
 const ADMIN_EMAILS = [
@@ -78,5 +78,5 @@ export function getTierForTool(): string {
 }
 
 export function getMembershipPortalUrl(): string {
-  return process.env.MEMBERSHIP_PORTAL_URL || `${MEMBERSHIP_API_URL}/membership`;
+  return "https://www.felixpay.online/membership";
 }
