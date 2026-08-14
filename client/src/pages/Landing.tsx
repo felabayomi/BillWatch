@@ -5,16 +5,23 @@ import heroMockup from "@assets/generated_images/Sharp_bill_management_app_mocku
 import step1Image from "@assets/generated_images/Scanning_bill_step_eeccd80b.png";
 import step2Image from "@assets/generated_images/AI_extracting_data_450568c3.png";
 import step3Image from "@assets/generated_images/Payment_reminder_notification_05b7afaa.png";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useUser } from "@clerk/clerk-react";
 
 const MEMBERSHIP_PORTAL_URL = "https://www.felixpay.online/membership";
 const MEMBERSHIP_HUB_URL = import.meta.env.VITE_MEMBERSHIP_HUB_URL || new URL(MEMBERSHIP_PORTAL_URL).origin;
 
 export default function Landing() {
   const { openSignIn } = useClerk();
-  const handleLogin = () => {
-    openSignIn({ redirectUrl: "/app" });
-  };
+const { isSignedIn } = useUser();
+
+const handleLogin = () => {
+  if (isSignedIn) {
+    window.location.href = "/app";
+    return;
+  }
+
+  openSignIn({ redirectUrl: "/app" });
+};
 
   const handleMembership = () => {
     window.open(MEMBERSHIP_PORTAL_URL, "_blank", "noopener,noreferrer");
