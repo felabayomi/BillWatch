@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ShieldX, ExternalLink } from "lucide-react";
 
-const MEMBERSHIP_PORTAL_URL = import.meta.env.VITE_MEMBERSHIP_PORTAL_URL || "https://felixpay.net/membership";
+const MEMBERSHIP_PORTAL_URL = "https://www.felixpay.online/membership";
 
 interface MembershipCheckResponse {
   hasAccess: boolean;
