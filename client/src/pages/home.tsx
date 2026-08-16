@@ -52,6 +52,7 @@ export default function Home() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { data: allBills = [] } = useBills();
   const { data: bills = [], isLoading: billsLoading, error: billsError } = useBills(selectedDate);
   const { data: stats, isLoading: statsLoading, error: statsError } = useBillStats(selectedDate);
   const { data: carryoverBills = [], isLoading: carryoverLoading } = useCarryoverBills(selectedDate);
@@ -85,6 +86,28 @@ export default function Home() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!allBills.length) return;
+
+    const currentMonthKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
+    const hasBillsInSelectedMonth = allBills.some(bill => {
+      const due = new Date(bill.dueDate);
+      return due.getFullYear() === selectedDate.getFullYear() && due.getMonth() === selectedDate.getMonth();
+    });
+
+    if (hasBillsInSelectedMonth) return;
+
+    const nextBill = [...allBills]
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+      .find(bill => new Date(bill.dueDate).getTime() >= new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getTime());
+
+    if (!nextBill) return;
+
+    const dueDate = new Date(nextBill.dueDate);
+    const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
+    setSelectedDate(nextMonth);
+  }, [allBills, selectedDate]);
 
   // Filter bills based on active filter and search query
   const filteredBills = bills.filter(bill => {
