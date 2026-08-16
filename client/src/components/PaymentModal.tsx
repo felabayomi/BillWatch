@@ -580,12 +580,12 @@ export function PaymentModal({ open, onOpenChange, bill, initialFlow = "record" 
                     });
                     
                     if (response.ok) {
-                      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+                      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
                       // Invalidate bill-specific cache keys for consistency
                       queryClient.invalidateQueries({ queryKey: ["/api/bills", bill.id, "balance"] });
                       queryClient.invalidateQueries({ queryKey: ["/api/bills", bill.id, "payments"] });
-                      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"] });
+                      queryClient.invalidateQueries({ queryKey: ["/api/bills/carryover"], exact: false });
                       toast({
                         title: "Bill marked as unpaid",
                         description: "The bill has been marked as unpaid successfully.",

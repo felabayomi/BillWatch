@@ -47,7 +47,7 @@ export function useUpdateBillCategory() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['category-stats'] });
     },
   });
@@ -132,7 +132,7 @@ export function useRecategorizeExistingBills() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['category-stats'] });
       queryClient.invalidateQueries({ queryKey: ['recategorization-preview'] });
     },

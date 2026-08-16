@@ -45,8 +45,8 @@ export function useProcessCleanup() {
     },
     onSuccess: () => {
       // Invalidate bill queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bills/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills/stats'], exact: false });
     },
   });
 }
@@ -71,7 +71,7 @@ export function useRestoreArchivedBills() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['archived-bills'] });
     },
   });

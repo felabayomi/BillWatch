@@ -132,9 +132,9 @@ export function BillDetails() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
       queryClient.invalidateQueries({ queryKey: ["/api/bills", billId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
       toast({
         title: "Bill updated",
         description: "Bill details have been saved successfully.",
@@ -157,8 +157,8 @@ export function BillDetails() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["/api/bills/stats"], exact: false });
       toast({
         title: "Bill deleted",
         description: "Bill has been deleted successfully.",

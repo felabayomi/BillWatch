@@ -318,7 +318,7 @@ export default function UnifiedPaymentMonitoring() {
       setIsRefreshing(true);
       
       // Invalidate queries first to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['/api/bills'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bills'], exact: false });
       queryClient.invalidateQueries({ queryKey: ['/api/billcom/payments/status'] });
       
       // Then refetch both
