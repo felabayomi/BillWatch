@@ -1,5 +1,6 @@
 import Tesseract from 'tesseract.js';
 import pdf2pic from 'pdf2pic';
+import pdfParse from 'pdf-parse';
 import OpenAI from 'openai';
 import type { ParsedBillDocument, ParsedBillInfo } from './aiParser.ts';
 
@@ -298,15 +299,12 @@ Return valid JSON only with this exact top-level shape:
       let directText = '';
       try {
         console.log('Attempting direct PDF text extraction...');
-        const pdfParseModule = await import('pdf-parse');
-        const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
         const pdfData = await pdfParse(pdfBuffer);
         if (pdfData && pdfData.text && pdfData.text.trim().length > 10) {
           console.log('Successfully extracted text directly from PDF, pages:', pdfData.numpages || 1);
           console.log('Direct PDF text length:', pdfData.text.length);
           directText = pdfData.text.trim();
           
-          // If we have substantial text, return it (OCR might fail with missing binaries)
           if (pdfData.text.length > 100) {
             console.log('Direct extraction successful with substantial content');
             return directText;
@@ -315,7 +313,11 @@ Return valid JSON only with this exact top-level shape:
           console.log('PDF contains minimal text, trying OCR...');
         }
       } catch (directError: any) {
-        console.log('Direct PDF text extraction failed:', directError?.message || 'Unknown error');
+        console.error('[pdf-text:error]', {
+          name: directError instanceof Error ? directError.name : 'UnknownError',
+          message: directError instanceof Error ? directError.message : String(directError),
+          bufferLength: pdfBuffer.length,
+        });
       }
 
       // Keep PDF OCR in a low-cost mode for Vercel/serverless deployments.

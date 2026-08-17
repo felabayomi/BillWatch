@@ -6,6 +6,69 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 
+export function normalizeDateInputValue(value: string | Date | null | undefined): string {
+  if (!value) return "";
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function parseValidDueDate(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseValidNumericAmount(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const normalised = typeof value === "number"
+    ? value
+    : Number(String(value).replace(/[$,\s]/g, "").replace(/[^0-9.-]/g, ""));
+
+  return Number.isFinite(normalised) ? normalised : null;
+}
+
+export function validateScannedBill(bill: ParsedScanBill): string | null {
+  const companyName = typeof bill.company === "string" ? bill.company.trim() : "";
+  if (!companyName) {
+    return "Company name is required.";
+  }
+
+  if (parseValidNumericAmount(bill.amount ?? bill.minimumPayment) === null) {
+    return "A valid amount is required.";
+  }
+
+  if (!bill.dueDate || parseValidDueDate(bill.dueDate) === null) {
+    return "A valid due date is required.";
+  }
+
+  return null;
+}
+
 interface ScanModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,16 +105,32 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
   const saveAllScannedBills = async () => {
     if (parsedBills.length === 0) return;
 
+    const invalidBill = parsedBills.find((bill) => validateScannedBill(bill));
+    if (invalidBill) {
+      toast({
+        title: "Review required",
+        description: validateScannedBill(invalidBill),
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSavingAll(true);
     try {
       const createdBills: any[] = [];
 
       for (const bill of parsedBills) {
-        const dueDate = bill.dueDate ? new Date(bill.dueDate) : new Date();
+        const parsedAmount = parseValidNumericAmount(bill.amount ?? bill.minimumPayment);
+        const dueDate = parseValidDueDate(bill.dueDate);
+
+        if (parsedAmount === null || dueDate === null) {
+          throw new Error("A scanned bill is missing a required valid amount or due date.");
+        }
+
         const payload = {
-          company: bill.company || "Unknown Company",
-          amount: String(bill.amount ?? bill.minimumPayment ?? 0),
-          dueDate: dueDate.toISOString(),
+          company: String(bill.company ?? "").trim(),
+          amount: String(parsedAmount),
+          dueDate: new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate()).toISOString(),
           category: bill.category || "Other",
           description: bill.description || "",
           accountNumber: bill.accountNumber || null,
@@ -194,6 +273,7 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
               : bill.installments?.[0]?.installmentNumber
                 ? `${bill.installments[0].installmentNumber}`
                 : "1";
+            const validationMessage = validateScannedBill(bill);
 
             return (
               <div key={`${bill.company || "bill"}-${bill.amount || "amount"}-${index}`} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
@@ -218,12 +298,17 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
                   <div>
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Due date</p>
                     <input
-                      value={bill.dueDate ? new Date(bill.dueDate).toISOString().slice(0, 10) : ""}
+                      type="date"
+                      value={normalizeDateInputValue(bill.dueDate)}
                       onChange={(event) => updateBillField(index, "dueDate", event.target.value)}
                       className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm"
                     />
                   </div>
                 </div>
+
+                {validationMessage && (
+                  <p className="text-xs text-red-600">{validationMessage}</p>
+                )}
               </div>
             );
           })}
@@ -233,7 +318,12 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
           <Button variant="outline" className="flex-1" onClick={() => { setParsedBills([]); setIsProcessing(false); onOpenChange(false); }} data-testid="button-cancel-scan-results">
             Cancel
           </Button>
-          <Button className="flex-1" onClick={saveAllScannedBills} disabled={isSavingAll} data-testid="button-save-all-scanned-bills">
+          <Button
+            className="flex-1"
+            onClick={saveAllScannedBills}
+            disabled={isSavingAll || parsedBills.some((bill) => validateScannedBill(bill) !== null)}
+            data-testid="button-save-all-scanned-bills"
+          >
             {isSavingAll ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
             Save All
           </Button>

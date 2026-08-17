@@ -1196,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OCR and document processing endpoint
   app.post("/api/bills/scan", isAuthenticated, upload.any(), async (req: any, res) => {
-    let currentStage: "upload" | "ocr" | "parser" | "validation" = "upload";
+    let currentStage: "upload" | "pdf-text" | "pdf-vision" | "image-vision" | "parser" | "validation" = "upload";
 
     try {
       const userId = req.user.claims.sub;
@@ -1249,7 +1249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bufferLength: file.buffer?.length
         });
 
-        currentStage = "ocr";
+        currentStage = file.mimetype === 'application/pdf' ? 'pdf-text' : 'image-vision';
         console.log(`Processing file ${i + 1} of ${files.length}...`);
 
         if (file.mimetype.startsWith('image/')) {
@@ -1270,6 +1270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           continue;
         }
 
+        currentStage = 'pdf-text';
         const text = await ocrService.processDocument(file.buffer, file.mimetype);
         const pageMarker = `=== FILE ${i + 1}: ${file.originalname || `document-${i + 1}`} ===\n\n--- PAGE 1 ---\n${text}\n`;
         extractedText += (i > 0 ? "\n\n" : "") + pageMarker;
@@ -1282,10 +1283,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log({
-        stage: "ocr",
+        stage: imageVisionHit ? "image-vision" : "pdf-text",
         filename: files.map(file => file.originalname).join(", "),
         mimeType: files.map(file => file.mimetype).join(", "),
-        extractionMethod: imageVisionHit ? "direct-image-vision" : "ocr-or-pdf-parse",
+        extractionMethod: imageVisionHit ? "direct-image-vision" : "pdf-text",
         pageCount: files.length,
         extractedTextLength: extractedText.length
       });

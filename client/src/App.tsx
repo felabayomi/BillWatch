@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useUser } from "@clerk/clerk-react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import Home from "@/pages/home";
 import Landing from "@/pages/Landing";
@@ -88,14 +89,56 @@ function Router() {
   );
 }
 
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("[app:error-boundary]", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
+          <div className="max-w-md rounded-lg border border-border bg-card p-6 shadow-sm">
+            <h1 className="text-xl font-semibold">Something went wrong</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              The app hit an unexpected error. Please reload the page and try again.
+            </p>
+            <button
+              className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+              onClick={() => window.location.reload()}
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <AppErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   );
 }
 
