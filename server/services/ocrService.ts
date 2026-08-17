@@ -1,6 +1,6 @@
 import Tesseract from 'tesseract.js';
 import pdf2pic from 'pdf2pic';
-import pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 import OpenAI from 'openai';
 import type { ParsedBillDocument, ParsedBillInfo } from './aiParser.ts';
 
@@ -299,18 +299,38 @@ Return valid JSON only with this exact top-level shape:
       let directText = '';
       try {
         console.log('Attempting direct PDF text extraction...');
-        const pdfData = await pdfParse(pdfBuffer);
-        if (pdfData && pdfData.text && pdfData.text.trim().length > 10) {
-          console.log('Successfully extracted text directly from PDF, pages:', pdfData.numpages || 1);
-          console.log('Direct PDF text length:', pdfData.text.length);
-          directText = pdfData.text.trim();
-          
-          if (pdfData.text.length > 100) {
-            console.log('Direct extraction successful with substantial content');
-            return directText;
-          }
-        } else {
-          console.log('PDF contains minimal text, trying OCR...');
+        const parser = new PDFParse({
+  data: new Uint8Array(pdfBuffer),
+});
+
+try {
+  const pdfData = await parser.getText();
+
+  const extractedText =
+    pdfData?.text?.trim() ?? '';
+
+  if (extractedText.length > 10) {
+    console.log(
+      'Successfully extracted text directly from PDF'
+    );
+
+    console.log(
+      'Direct PDF text length:',
+      extractedText.length
+    );
+
+    directText = extractedText;
+
+    if (extractedText.length > 100) {
+      console.log(
+        'Direct extraction successful with substantial content'
+      );
+
+      return directText;
+    }
+  }
+        } finally {
+          await parser.destroy();
         }
       } catch (directError: any) {
         console.error('[pdf-text:error]', {
