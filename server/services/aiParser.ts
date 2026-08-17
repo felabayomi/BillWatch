@@ -306,7 +306,23 @@ export class AIParserService {
       if (installmentRows.length > 0) {
         return installmentRows;
       }
+const labeledBill = this.parseLabeledBill(extractedText);
 
+if (
+  labeledBill &&
+  labeledBill.company &&
+  labeledBill.amount &&
+  labeledBill.dueDate &&
+  labeledBill.confidence >= 0.9
+) {
+  console.log({
+    stage: "deterministic-parser",
+    matched: true,
+    confidence: labeledBill.confidence,
+  });
+
+  return [labeledBill];
+}
       if (!openai) {
         throw new Error("OpenAI is not configured yet");
       }
