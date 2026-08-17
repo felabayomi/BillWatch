@@ -1,7 +1,69 @@
 import Tesseract from 'tesseract.js';
 import pdf2pic from 'pdf2pic';
+import OpenAI from 'openai';
+import type { ParsedBillDocument, ParsedBillInfo } from './aiParser.ts';
+
+const openaiApiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
 
 export class OCRService {
+  private parseNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+
+    const numeric = Number(String(value).replace(/[$,\s]/g, '').replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  private normalizeVisionBill(rawBill: any): ParsedBillInfo | null {
+    if (!rawBill || typeof rawBill !== 'object') {
+      return null;
+    }
+
+    const company = typeof rawBill.company === 'string' && rawBill.company.trim() ? rawBill.company.trim() : null;
+    const amount = this.parseNullableNumber(rawBill.amount);
+    const minimumPayment = this.parseNullableNumber(rawBill.minimumPayment);
+    const originalAmount = this.parseNullableNumber(rawBill.originalAmount);
+    const confidence = Number.isFinite(Number(rawBill.confidence)) ? Math.max(0, Math.min(1, Number(rawBill.confidence))) : 0.5;
+
+    if (!company && amount === null && minimumPayment === null && !rawBill.description) {
+      return null;
+    }
+
+    const installmentEntries = Array.isArray(rawBill.installments)
+      ? rawBill.installments.map((entry: any) => ({
+          amount: this.parseNullableNumber(entry?.amount) !== null ? String(this.parseNullableNumber(entry.amount)) : '0',
+          dueDate: entry?.dueDate ? new Date(entry.dueDate) : null,
+          installmentNumber: Number(entry?.installmentNumber ?? 1),
+          isPaid: Boolean(entry?.isPaid),
+        }))
+      : null;
+
+    const dueDateValue = rawBill.dueDate ? new Date(rawBill.dueDate) : null;
+
+    return {
+      company,
+      accountNumber: typeof rawBill.accountNumber === 'string' && rawBill.accountNumber.trim() ? rawBill.accountNumber.trim() : null,
+      amount: amount !== null ? String(amount) : null,
+      minimumPayment: minimumPayment !== null ? String(minimumPayment) : null,
+      dueDate: dueDateValue && !Number.isNaN(dueDateValue.getTime()) ? dueDateValue : null,
+      category: typeof rawBill.category === 'string' && rawBill.category.trim() ? rawBill.category.trim() : null,
+      description: typeof rawBill.description === 'string' && rawBill.description.trim() ? rawBill.description.trim() : null,
+      confidence,
+      payeeAddress: rawBill.payeeAddress ?? null,
+      isRecurring: Boolean(rawBill.isRecurring),
+      recurringType: rawBill.recurringType ?? null,
+      installments: installmentEntries,
+      totalInstallments: rawBill.totalInstallments ?? null,
+      originalAmount: originalAmount !== null ? String(originalAmount) : null,
+    };
+  }
+
   private async withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
     let timer: NodeJS.Timeout | undefined;
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -15,6 +77,129 @@ export class OCRService {
     } finally {
       if (timer) clearTimeout(timer);
     }
+  }
+
+  async processImageBills(imageBuffer: Buffer, mimeType: string): Promise<ParsedBillDocument> {
+    if (!openai) {
+      throw new Error('OpenAI is not configured for image bill extraction');
+    }
+
+    const imageUrl = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+    const systemPrompt = `The image may contain one or multiple independent bills, installments, invoices, statements, or payment rows.
+
+Extract EVERY separately payable item.
+
+Do not assume one image equals one bill.
+
+Do not merge records merely because they have the same merchant.
+
+Repeated rows with different amounts, due dates, installment positions, account numbers, or invoice numbers are separate records.
+
+Never invent $0 for an unreadable amount. Use null.
+
+Never invent Unknown Company as a successful company value. Use null.
+
+Never substitute today's date for an unreadable due date. Use null.
+
+Return valid JSON only with this exact top-level shape:
+{
+  "bills": [
+    {
+      "company": string | null,
+      "accountNumber": string | null,
+      "amount": number | null,
+      "minimumPayment": number | null,
+      "dueDate": string | null,
+      "category": string | null,
+      "description": string | null,
+      "payeeAddress": string | null,
+      "isRecurring": boolean | null,
+      "recurringType": string | null,
+      "installments": number | null,
+      "totalInstallments": number | null,
+      "originalAmount": number | null,
+      "confidence": number
+    }
+  ],
+  "warnings": []
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'text',
+              text: 'Extract each separately payable bill, installment, invoice, or payment row from this image. If information is unreadable, use null instead of guessing.',
+            },
+            { type: 'image_url', image_url: { url: imageUrl } },
+          ],
+        },
+      ],
+      max_tokens: 2500,
+    });
+
+    const rawContent = response.choices[0]?.message?.content ?? '{}';
+    const parsed = JSON.parse(rawContent) as any;
+    const rawBills = Array.isArray(parsed?.bills) ? parsed.bills : [];
+
+    const normalizedBills = rawBills
+      .map((rawBill: any) => this.normalizeVisionBill(rawBill))
+      .filter((bill): bill is ParsedBillInfo => bill !== null);
+
+    return {
+      bills: normalizedBills,
+      confidence: normalizedBills.length > 0
+        ? Math.max(0, Math.min(1, Number(parsed?.confidence ?? 0.9)))
+        : 0,
+      warnings: Array.isArray(parsed?.warnings) ? parsed.warnings.filter((warning: unknown) => typeof warning === 'string') : [],
+    };
+  }
+
+  private async extractTextWithOpenAI(imageBuffer: Buffer, mimeType: string): Promise<string> {
+    if (!openai) {
+      throw new Error('OpenAI is not configured for OCR');
+    }
+
+    const base64Image = imageBuffer.toString('base64');
+    const imageUrl = `data:${mimeType};base64,${base64Image}`;
+
+    console.log({
+      stage: 'ocr-openai',
+      openAIConfigured: Boolean(openaiApiKey),
+      mimeType,
+      bufferLength: imageBuffer.length,
+      model: 'gpt-4o-mini',
+    });
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: 'Extract all readable text from this bill image. Return only the text content, preserve the important lines and amounts, and do not add commentary.'
+        },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extract all readable text from this document.' },
+            { type: 'image_url', image_url: { url: imageUrl } }
+          ]
+        }
+      ],
+      max_tokens: 2000,
+    });
+
+    const text = response.choices[0]?.message?.content ?? '';
+    if (!text || text.trim().length === 0) {
+      throw new Error('OpenAI OCR returned no text');
+    }
+
+    return text.trim();
   }
 
   async extractText(imageBuffer: Buffer, mimeType: string): Promise<string> {
@@ -46,7 +231,6 @@ export class OCRService {
       const { data: { text } } = await this.withTimeout(recognizeTask, 10000, 'OCR extraction');
       
       console.log('OCR extraction completed, extracted text length:', text.length);
-      console.log('Sample extracted text (first 300 chars):', text.substring(0, 300));
       
       if (!text || text.trim().length === 0) {
         throw new Error('No text could be extracted from the image');
@@ -54,20 +238,27 @@ export class OCRService {
       
       return text.trim();
     } catch (error) {
-      console.error('OCR extraction failed:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
-      if (errorMessage.includes('timed out')) {
-        throw new Error('OCR timed out while processing the document. Please try a clearer image or a smaller PDF.');
+      console.error('Tesseract OCR extraction failed, falling back to OpenAI vision:', error);
+
+      try {
+        const fallbackText = await this.extractTextWithOpenAI(imageBuffer, mimeType);
+        console.log({ stage: 'ocr-complete', extractedTextLength: fallbackText.length });
+        return fallbackText;
+      } catch (fallbackError) {
+        console.error('OpenAI OCR fallback failed:', fallbackError);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        if (errorMessage.includes('timed out')) {
+          throw new Error('OCR timed out while processing the document. Please try a clearer image or a smaller PDF.');
+        }
+        if (errorMessage.includes('Invalid or empty image buffer')) {
+          throw new Error('Invalid image file. Please try a different image.');
+        } else if (errorMessage.includes('No text could be extracted')) {
+          throw new Error('No text found in image. Please ensure the bill is clearly visible and try again.');
+        }
+        
+        throw new Error('Failed to extract text from document. Please ensure the image is clear and try again.');
       }
-      if (errorMessage.includes('Invalid or empty image buffer')) {
-        throw new Error('Invalid image file. Please try a different image.');
-      } else if (errorMessage.includes('No text could be extracted')) {
-        throw new Error('No text found in image. Please ensure the bill is clearly visible and try again.');
-      }
-      
-      throw new Error('Failed to extract text from document. Please ensure the image is clear and try again.');
     }
   }
 

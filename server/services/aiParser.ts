@@ -133,10 +133,89 @@ export class AIParserService {
     return bill;
   }
 
-  private async parseSingleBillSection(extractedText: string): Promise<ParsedBillInfo | null> {
+  private parseInstallmentDueDate(dueText: string | null | undefined): Date | null {
+    if (!dueText || !dueText.trim()) {
+      return null;
+    }
+
+    const normalized = dueText.trim().replace(/^due\s+/i, "");
+    const monthMatch = normalized.match(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i);
+    const dayMatch = normalized.match(/\b(\d{1,2})\b/);
+
+    if (!monthMatch || !dayMatch) {
+      return null;
+    }
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthIndex = monthNames.findIndex((month) => month.toLowerCase() === monthMatch[1].toLowerCase());
+    const day = Number(dayMatch[1]);
+
+    if (monthIndex === -1 || !Number.isFinite(day)) {
+      return null;
+    }
+
+    const year = new Date().getFullYear();
+    const parsed = new Date(year, monthIndex, day);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private parseInstallmentRows(text: string): ParsedBillInfo[] {
+    const rows = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    const matches: ParsedBillInfo[] = [];
+
+    for (const row of rows) {
+      const rowMatch = row.match(/^(?<company>[A-Za-z0-9&.()\/\- ]+?)\s+\$?(?<amount>\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s+(?<installmentNumber>\d+)\s+of\s+(?<totalInstallments>\d+)\s+(?:due\s+)?(?<dueText>.*)$/i);
+
+      if (!rowMatch?.groups) continue;
+
+      const company = (rowMatch.groups.company || "").trim();
+      const amount = rowMatch.groups.amount.replace(/,/g, "");
+      const installmentNumber = Number(rowMatch.groups.installmentNumber);
+      const totalInstallments = Number(rowMatch.groups.totalInstallments);
+      const dueText = rowMatch.groups.dueText?.trim();
+      const dueDate = this.parseInstallmentDueDate(dueText);
+
+      if (!company || !Number.isFinite(installmentNumber) || !Number.isFinite(totalInstallments)) continue;
+
+      matches.push({
+        company,
+        accountNumber: null,
+        amount,
+        minimumPayment: amount,
+        dueDate,
+        category: "Credit Card",
+        description: `${company} payment plan`,
+        confidence: 0.95,
+        payeeAddress: null,
+        isRecurring: true,
+        recurringType: "payment_plan",
+        installments: [{
+          amount,
+          dueDate,
+          installmentNumber,
+          isPaid: false,
+        }],
+        totalInstallments,
+        originalAmount: amount,
+      });
+    }
+
+    return matches;
+  }
+
+  private async parseSingleBillSection(extractedText: string): Promise<ParsedBillInfo[]> {
     try {
       if (!extractedText || extractedText.trim().length === 0) {
         throw new Error("No text provided for AI parsing");
+      }
+
+      const installmentRows = this.parseInstallmentRows(extractedText);
+      if (installmentRows.length > 0) {
+        return installmentRows;
       }
 
       if (!openai) {
@@ -160,13 +239,11 @@ export class AIParserService {
 
       const parsed = JSON.parse(response.choices[0]?.message?.content || "{}") as any;
       const candidates = Array.isArray(parsed?.bills) ? parsed.bills : [parsed];
-      const normalized = candidates.map((item: any) => this.normalizeBill(item)).filter((item) => item && (item.company || item.amount || item.description || item.dueDate));
+      const normalized = candidates
+        .map((item: any) => this.normalizeBill(item))
+        .filter((item) => item && (item.company || item.amount || item.description || item.dueDate));
 
-      if (normalized.length > 0) {
-        return normalized[0];
-      }
-
-      return null;
+      return normalized;
     } catch (error) {
       console.error({
         stage: "ai-parser",
@@ -175,7 +252,12 @@ export class AIParserService {
         extractedTextLength: extractedText?.length ?? 0,
       });
 
-      return this.fallbackParsing(extractedText);
+      const fallbackBills = this.parseInstallmentRows(extractedText);
+      if (fallbackBills.length > 0) {
+        return fallbackBills;
+      }
+
+      return [];
     }
   }
 
@@ -195,18 +277,20 @@ export class AIParserService {
     let confidence = 0;
 
     for (const section of sections) {
-      const parsedBill = await this.parseSingleBillSection(section.text);
-      if (parsedBill) {
-        bills.push(parsedBill);
-        confidence = Math.max(confidence, parsedBill.confidence);
+      const parsedBills = await this.parseSingleBillSection(section.text);
+      if (parsedBills.length > 0) {
+        bills.push(...parsedBills);
+        confidence = Math.max(confidence, ...parsedBills.map((bill) => bill.confidence));
       }
     }
 
     if (bills.length === 0) {
-      const fallbackBill = this.fallbackParsing(sanitizedDocument);
-      bills.push(fallbackBill);
-      confidence = fallbackBill.confidence;
-      warnings.push("Fallback parsing was used because no bill fields could be extracted.");
+      warnings.push("No valid bill candidates could be extracted from this document.");
+      return {
+        bills: [],
+        confidence: 0,
+        warnings,
+      };
     }
 
     return {
@@ -217,84 +301,15 @@ export class AIParserService {
   }
 
   private fallbackParsing(text: string): ParsedBillInfo {
-    const lower = text.toLowerCase();
-    const companyMatch = text.match(/\b(synchrony|syncbank|capital one|chase|citi|citibank|american express|amex|discover|bank of america|wells fargo)\b/gi);
-    const amazonMatch = text.match(/amazon/i);
-    const cardTypeMatch = text.match(/(?:amazon\s+prime|prime secured|visa|mastercard|amex)/gi);
-
-    let company: string | null = companyMatch && companyMatch.length > 0 ? companyMatch[0] : null;
-    if (amazonMatch && !company) {
-      company = "Amazon";
-    }
-    if (company && /synchrony|syncbank/i.test(company)) {
-      company = "Synchrony Bank";
-      if (amazonMatch) {
-        company += " (Amazon Prime Card)";
-      }
-    } else if (company && /amazon/i.test(company)) {
-      company = "Amazon";
-    }
-
-    if (!company && (lower.includes("credit") || lower.includes("card") || lower.includes("payment due"))) {
-      company = "Credit Card Company";
-    }
-
-    const matchCurrency = (pattern: RegExp): string | null => {
-      const matches = text.match(pattern);
-      if (!matches || matches.length === 0) return null;
-      const candidate = (matches[1] || matches[0]).replace(/[$,]/g, "").trim();
-      const numeric = candidate.match(/-?\d+(?:\.\d+)?/);
-      return numeric ? numeric[0] : null;
-    };
-
-    const totalMinimumDue =
-      matchCurrency(/total minimum payment due\s*[:\-]?\s*\$?(\d{1,3}(?:,\d{3})*\.\d{2})/i) ||
-      matchCurrency(/minimum payment due\s*[:\-]?\s*\$?(\d{1,3}(?:,\d{3})*\.\d{2})/i) ||
-      matchCurrency(/amount due\s*[:\-]?\s*\$?(\d{1,3}(?:,\d{3})*\.\d{2})/i) ||
-      null;
-
-    const newBalance =
-      matchCurrency(/new balance\s*[:\-]?\s*\$?(\d{1,3}(?:,\d{3})*\.\d{2})/i) ||
-      matchCurrency(/balance\s*[:\-]?\s*\$?(\d{1,3}(?:,\d{3})*\.\d{2})/i) ||
-      null;
-
-    const amount = totalMinimumDue || newBalance || null;
-    const minimumPayment = totalMinimumDue || amount || null;
-
-    const matchDate = (pattern: RegExp): Date | null => {
-      const match = text.match(pattern);
-      if (!match) return null;
-      const parsed = new Date(match[1] || match[0]);
-      return Number.isNaN(parsed.getTime()) ? null : parsed;
-    };
-
-    const dueDate =
-      matchDate(/payment due date\s*[:\-]?\s*(\d{1,2}\/\d{1,2}\/\d{4})/i) ||
-      matchDate(/due date\s*[:\-]?\s*(\d{1,2}\/\d{1,2}\/\d{4})/i) ||
-      null;
-
-    let category: string | null = null;
-    if (lower.includes("minimum payment") || lower.includes("payment due") || lower.includes("new balance") || lower.includes("credit") || lower.includes("card") || (company && /synchrony|chase|capital one|citi|discover|bank of america|wells fargo|amex/i.test(company))) {
-      category = "Credit Card";
-    } else if (lower.includes("water") || lower.includes("electric") || lower.includes("utility")) {
-      category = "Utilities";
-    } else if (lower.includes("internet") || lower.includes("comcast") || lower.includes("verizon") || lower.includes("att")) {
-      category = "Internet";
-    } else if (lower.includes("phone") || lower.includes("mobile")) {
-      category = "Phone";
-    }
-
-    const description = company ? `${company}${cardTypeMatch ? ` (${cardTypeMatch[0]})` : ""}` : "Financial statement";
-
     return {
-      company,
+      company: null,
       accountNumber: null,
-      amount,
-      minimumPayment,
-      dueDate,
-      category,
-      description,
-      confidence: amount || dueDate || company ? 0.4 : 0,
+      amount: null,
+      minimumPayment: null,
+      dueDate: null,
+      category: null,
+      description: null,
+      confidence: 0,
       payeeAddress: null,
       isRecurring: false,
       recurringType: null,

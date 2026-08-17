@@ -1196,12 +1196,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // OCR and document processing endpoint
   app.post("/api/bills/scan", isAuthenticated, upload.any(), async (req: any, res) => {
+    let currentStage: "upload" | "ocr" | "parser" | "validation" = "upload";
+
     try {
       const userId = req.user.claims.sub;
 
       console.log('Scan request received for user:', userId);
 
-      // Handle both single file (req.file) and multiple files (req.files)
       const files = req.files as Express.Multer.File[] | undefined;
       
       if (!files || files.length === 0) {
@@ -1209,9 +1210,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No document uploaded" });
       }
 
-      console.log(`Received ${files.length} file(s)`);
-      
-      // Validate all file types - support images and PDFs
+      console.log('[scan]', { stage: currentStage, fileCount: files.length, files: files.map(file => ({
+        name: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        bufferLength: file.buffer?.length
+      })) });
+
+      currentStage = "upload";
       const supportedTypes = ['image/', 'application/pdf'];
       for (const file of files) {
         const isValidType = supportedTypes.some(type => file.mimetype.startsWith(type));
@@ -1219,11 +1225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('Invalid file type:', file.mimetype);
           return res.status(400).json({ error: "Please upload image files (PNG, JPG, etc.) or PDF documents" });
         }
-        console.log('File received:', {
-          originalName: file.originalname,
-          mimeType: file.mimetype,
-          size: file.buffer.length
-        });
       }
 
       const ocrService = new OCRService();
@@ -1234,21 +1235,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const extractedFiles: Array<{ fileIndex: number; filename: string; mimeType: string; pages: Array<{ pageNumber: number; text: string }> }> = [];
       let extractedText = "";
+      let parsedDocument = { bills: [] as any[], confidence: 0, warnings: [] as string[] };
+      let imageVisionHit = false;
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         console.log({
           stage: "upload",
           fileCount: files.length,
-          files: files.map(file => ({
-            name: file.originalname,
-            mimeType: file.mimetype,
-            size: file.size,
-            bufferLength: file.buffer?.length
-          }))
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          bufferLength: file.buffer?.length
         });
 
+        currentStage = "ocr";
         console.log(`Processing file ${i + 1} of ${files.length}...`);
+
+        if (file.mimetype.startsWith('image/')) {
+          const directVisionResult = await ocrService.processImageBills(file.buffer, file.mimetype);
+          imageVisionHit = true;
+          parsedDocument = {
+            bills: [...parsedDocument.bills, ...directVisionResult.bills],
+            confidence: Math.max(parsedDocument.confidence, directVisionResult.confidence),
+            warnings: [...parsedDocument.warnings, ...directVisionResult.warnings],
+          };
+          extractedText += (i > 0 ? "\n\n" : "") + `=== FILE ${i + 1}: ${file.originalname || `document-${i + 1}`} ===\n\nDirect image vision extraction (${file.mimetype})\n`;
+          extractedFiles.push({
+            fileIndex: i,
+            filename: file.originalname,
+            mimeType: file.mimetype,
+            pages: [{ pageNumber: 1, text: JSON.stringify(directVisionResult) }]
+          });
+          continue;
+        }
+
         const text = await ocrService.processDocument(file.buffer, file.mimetype);
         const pageMarker = `=== FILE ${i + 1}: ${file.originalname || `document-${i + 1}`} ===\n\n--- PAGE 1 ---\n${text}\n`;
         extractedText += (i > 0 ? "\n\n" : "") + pageMarker;
@@ -1264,19 +1285,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         stage: "ocr",
         filename: files.map(file => file.originalname).join(", "),
         mimeType: files.map(file => file.mimetype).join(", "),
-        extractionMethod: "ocr-or-pdf-parse",
+        extractionMethod: imageVisionHit ? "direct-image-vision" : "ocr-or-pdf-parse",
         pageCount: files.length,
         extractedTextLength: extractedText.length
       });
 
-      const parsedDocument = await aiParser.parseBillInformation(extractedText);
-      console.log({
-        stage: "parser",
-        extractedTextLength: extractedText.length,
-        billCount: parsedDocument.bills.length,
-        confidence: parsedDocument.confidence
-      });
+      if (!imageVisionHit) {
+        currentStage = "parser";
+        parsedDocument = await aiParser.parseBillInformation(extractedText);
+        console.log({
+          stage: "parser",
+          extractedTextLength: extractedText.length,
+          billCount: parsedDocument.bills.length,
+          confidence: parsedDocument.confidence
+        });
+      } else {
+        console.log({
+          stage: "parser",
+          extractedTextLength: extractedText.length,
+          billCount: parsedDocument.bills.length,
+          confidence: parsedDocument.confidence,
+          directVision: true,
+        });
+      }
 
+      currentStage = "validation";
       const cleanAmount = (amount: unknown): string | null => {
         if (amount === null || amount === undefined || amount === "") {
           return null;
@@ -1302,8 +1335,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         confidence: parsedDocument.confidence,
       });
     } catch (error) {
-      console.error("Error processing scanned document:", error);
-      res.status(500).json({ error: "Failed to process document" });
+      const message = error instanceof Error ? error.message : String(error);
+      const name = error instanceof Error ? error.name : 'UnknownError';
+      const stack = error instanceof Error ? error.stack : undefined;
+
+      console.error("[scan:error]", {
+        stage: currentStage,
+        name,
+        message,
+        stack,
+      });
+
+      res.status(500).json({
+        error: "Failed to process document",
+        stage: currentStage,
+      });
     }
   });
 

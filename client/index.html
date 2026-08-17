@@ -25,55 +25,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- PWA Service Worker Registration - Aggressive Updates -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-              console.log('ServiceWorker registration successful:', registration.scope);
-              
-              // Force update check
-              registration.addEventListener('updatefound', function() {
-                const newWorker = registration.installing;
-                newWorker.addEventListener('statechange', function() {
-                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                    console.log('New service worker available, refreshing...');
-                    // Force skip waiting and refresh
-                    newWorker.postMessage({ type: 'SKIP_WAITING' });
-                    window.location.reload();
-                  }
-                });
-              });
-              
-              // Check for updates every 30 seconds
-              setInterval(function() {
-                registration.update();
-              }, 30000);
-            })
-            .catch(function(error) {
-              console.log('ServiceWorker registration failed:', error);
-            });
-          
-          // Listen for service worker messages
-          navigator.serviceWorker.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'FORCE_REFRESH') {
-              console.log('Service worker requesting page refresh');
-              window.location.reload();
-            }
-          });
-          
-          // Clear cache and reload if needed
-          if (window.location.search.includes('clear-cache')) {
-            navigator.serviceWorker.ready.then(function(registration) {
-              if (registration.active) {
-                registration.active.postMessage({ type: 'CLEAR_CACHE' });
-              }
-            });
-          }
-        });
-      }
-    </script>
+    <!-- Service worker disabled to prevent stale shell issues and broken route navigation. -->
     
   </body>
 </html>

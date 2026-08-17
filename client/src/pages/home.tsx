@@ -87,27 +87,8 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (!allBills.length) return;
-
-    const currentMonthKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth()}`;
-    const hasBillsInSelectedMonth = allBills.some(bill => {
-      const due = new Date(bill.dueDate);
-      return due.getFullYear() === selectedDate.getFullYear() && due.getMonth() === selectedDate.getMonth();
-    });
-
-    if (hasBillsInSelectedMonth) return;
-
-    const nextBill = [...allBills]
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-      .find(bill => new Date(bill.dueDate).getTime() >= new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getTime());
-
-    if (!nextBill) return;
-
-    const dueDate = new Date(nextBill.dueDate);
-    const nextMonth = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
-    setSelectedDate(nextMonth);
-  }, [allBills, selectedDate]);
+  // Keep the selected month under the user's control so they can browse past and future months normally.
+  // Do not auto-jump months based on bill dates; this blocks month navigation and makes the calendar feel broken.
 
   // Filter bills based on active filter and search query
   const filteredBills = bills.filter(bill => {
@@ -378,15 +359,15 @@ export default function Home() {
     const today = new Date();
     const startDate = new Date(2024, 0, 1);
     const endDate = addMonths(today, 12);
-    
-    let current = startDate;
+
+    let current = new Date(startDate);
     while (current <= endDate) {
       const value = format(current, "yyyy-MM");
       const label = format(current, "MMMM yyyy");
       options.push({ value, label, date: new Date(current) });
       current = addMonths(current, 1);
     }
-    
+
     return options;
   };
   
@@ -442,6 +423,15 @@ export default function Home() {
           <Select 
             value={format(selectedDate, "yyyy-MM")} 
             onValueChange={handleMonthChange}
+            onOpenChange={(open) => {
+              if (!open) return;
+
+              requestAnimationFrame(() => {
+                const currentValue = format(selectedDate, "yyyy-MM");
+                const selectedMonth = document.querySelector(`[data-value="${currentValue}"]`) as HTMLElement | null;
+                selectedMonth?.scrollIntoView({ behavior: "instant", block: "nearest" });
+              });
+            }}
           >
             <SelectTrigger className="w-auto border-0 shadow-none text-center font-medium">
               <div className="flex items-center space-x-2">

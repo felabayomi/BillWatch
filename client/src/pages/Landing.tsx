@@ -12,23 +12,28 @@ const MEMBERSHIP_HUB_URL = import.meta.env.VITE_MEMBERSHIP_HUB_URL || new URL(ME
 
 export default function Landing() {
   const { openSignIn } = useClerk();
-const { isSignedIn } = useUser();
+  const { isSignedIn } = useUser();
 
-const handleLogin = () => {
   if (isSignedIn) {
     window.location.href = "/app";
-    return;
+    return null;
   }
 
-  openSignIn({ redirectUrl: "/app" });
-};
+  const handleLogin = () => {
+    if (isSignedIn) {
+      window.location.href = "/app";
+      return;
+    }
 
-  const handleMembership = () => {
-    window.open(MEMBERSHIP_PORTAL_URL, "_blank", "noopener,noreferrer");
+    window.location.href = "/sign-in";
   };
 
   const handleBillWatchClick = () => {
     window.open("https://billwatch.pro", "_blank", "noopener,noreferrer");
+  };
+
+  const handleMembership = () => {
+    window.open(MEMBERSHIP_PORTAL_URL, "_blank", "noopener,noreferrer");
   };
 
   return (
