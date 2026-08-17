@@ -1,5 +1,6 @@
 import Tesseract from 'tesseract.js';
 import pdf2pic from 'pdf2pic';
+import { CanvasFactory } from 'pdf-parse/worker';
 import { PDFParse } from 'pdf-parse';
 import OpenAI from 'openai';
 import type { ParsedBillDocument, ParsedBillInfo } from './aiParser.ts';
@@ -301,6 +302,7 @@ Return valid JSON only with this exact top-level shape:
         console.log('Attempting direct PDF text extraction...');
         const parser = new PDFParse({
   data: new Uint8Array(pdfBuffer),
+  CanvasFactory,
 });
 
 try {
