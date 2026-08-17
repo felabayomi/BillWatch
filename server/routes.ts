@@ -54,6 +54,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  app.get('/api/version', (_req, res) => {
+    res.json({
+      commit: process.env.VERCEL_GIT_COMMIT_SHA || "local",
+      branch: process.env.VERCEL_GIT_COMMIT_REF || "local",
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV
+    });
+  });
+
   // API Token Authentication Middleware for Export Endpoints
   const validateExportToken = (req: any, res: any, next: any) => {
     const authHeader = req.headers.authorization;
@@ -1224,133 +1232,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Starting document processing...');
       
-      // Process all files and combine the extracted text
+      const extractedFiles: Array<{ fileIndex: number; filename: string; mimeType: string; pages: Array<{ pageNumber: number; text: string }> }> = [];
       let extractedText = "";
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        console.log({
+          stage: "upload",
+          fileCount: files.length,
+          files: files.map(file => ({
+            name: file.originalname,
+            mimeType: file.mimetype,
+            size: file.size,
+            bufferLength: file.buffer?.length
+          }))
+        });
+
         console.log(`Processing file ${i + 1} of ${files.length}...`);
         const text = await ocrService.processDocument(file.buffer, file.mimetype);
-        extractedText += (i > 0 ? "\n\n--- Page/Image " + (i + 1) + " ---\n\n" : "") + text;
+        const pageMarker = `=== FILE ${i + 1}: ${file.originalname || `document-${i + 1}`} ===\n\n--- PAGE 1 ---\n${text}\n`;
+        extractedText += (i > 0 ? "\n\n" : "") + pageMarker;
+        extractedFiles.push({
+          fileIndex: i,
+          filename: file.originalname,
+          mimeType: file.mimetype,
+          pages: [{ pageNumber: 1, text }]
+        });
       }
-      console.log('Document processing completed, total text length:', extractedText.length);
-      
-      // Parse bill information using AI
-      const billInfo = await aiParser.parseBillInformation(extractedText);
-      
-      // Helper function to clean monetary amounts
-      const cleanAmount = (amount: any): string => {
-        if (!amount) return "0";
-        // Remove $, commas, asterisks, and other non-numeric characters except decimal point
-        const cleaned = amount.toString().replace(/[\$,*\s]/g, '').trim();
-        // Extract just the numeric value
-        const match = cleaned.match(/[\d.]+/);
-        return match ? match[0] : "0";
+
+      console.log({
+        stage: "ocr",
+        filename: files.map(file => file.originalname).join(", "),
+        mimeType: files.map(file => file.mimetype).join(", "),
+        extractionMethod: "ocr-or-pdf-parse",
+        pageCount: files.length,
+        extractedTextLength: extractedText.length
+      });
+
+      const parsedDocument = await aiParser.parseBillInformation(extractedText);
+      console.log({
+        stage: "parser",
+        extractedTextLength: extractedText.length,
+        billCount: parsedDocument.bills.length,
+        confidence: parsedDocument.confidence
+      });
+
+      const cleanAmount = (amount: unknown): string | null => {
+        if (amount === null || amount === undefined || amount === "") {
+          return null;
+        }
+
+        const cleaned = String(amount).replace(/[$,*\s]/g, "").trim();
+        const match = cleaned.match(/-?\d+(?:\.\d+)?/);
+        return match ? match[0] : null;
       };
 
-      // Check if this is a recurring bill or payment plan
-      if (billInfo.isRecurring && billInfo.installments && billInfo.installments.length > 0) {
-        // Filter out already paid installments
-        const unpaidInstallments = billInfo.installments.filter(inst => !inst.isPaid);
-        const paidCount = billInfo.installments.length - unpaidInstallments.length;
-        
-        if (unpaidInstallments.length === 0) {
-          // All installments are paid
-          return res.json({
-            message: "All installments for this bill have already been paid",
-            paidInstallments: billInfo.installments.length,
-            extractedInfo: billInfo,
-            confidence: billInfo.confidence
-          });
-        }
-        
-        console.log(`Payment plan detected: ${unpaidInstallments.length} unpaid, ${paidCount} already paid`);
-        
-        // Generate a unique series ID for this payment plan
-        const seriesId = `series_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Create bills only for unpaid installments
-        const billsData = unpaidInstallments.map((installment, index) => ({
-          company: billInfo.company || "Unknown Company",
-          accountNumber: billInfo.accountNumber,
-          amount: cleanAmount(installment.amount),
-          minimumPayment: cleanAmount(billInfo.minimumPayment),
-          dueDate: installment.dueDate,
-          category: billInfo.category,
-          description: `${billInfo.description || "Payment plan"} - Payment ${installment.installmentNumber} of ${billInfo.totalInstallments}`,
-          creditorPaymentAddress: billInfo.payeeAddress,
-          billType: "personal",
-          businessName: null,
-          extractedData: {
-            originalText: extractedText,
-            confidence: billInfo.confidence,
-            extractedFields: billInfo
-          },
-          // Recurring bill fields
-          isRecurring: true,
-          seriesId: seriesId,
-          installmentNumber: installment.installmentNumber,
-          totalInstallments: billInfo.totalInstallments,
-          recurringType: billInfo.recurringType as "payment_plan" | "daily" | "weekly" | "biweekly" | "monthly" | "quarterly" | "biannually" | "yearly" | "custom" | null,
-          originalAmount: cleanAmount(billInfo.originalAmount),
-          userId
-        }));
+      const sanitizedBills = parsedDocument.bills.map((billInfo) => ({
+        ...billInfo,
+        amount: cleanAmount(billInfo.amount),
+        minimumPayment: cleanAmount(billInfo.minimumPayment),
+        dueDate: billInfo.dueDate ?? null,
+        originalAmount: cleanAmount(billInfo.originalAmount),
+      }));
 
-        // Create all bills in the series
-        const createdBills = await storage.createBillSeries(billsData);
-        
-        // Create reminders for each bill
-        for (const bill of createdBills) {
-          await reminderService.createDefaultReminders(bill.id, bill.dueDate);
-        }
-        
-        res.json({
-          bills: createdBills,
-          isRecurring: true,
-          seriesId: seriesId,
-          totalInstallments: billInfo.totalInstallments,
-          unpaidInstallments: unpaidInstallments.length,
-          paidInstallmentsSkipped: paidCount,
-          extractedInfo: billInfo,
-          confidence: billInfo.confidence
-        });
-      } else {
-        // Create single bill for non-recurring bills
-        const billData = {
-          company: billInfo.company || "Unknown Company",
-          accountNumber: billInfo.accountNumber,
-          amount: cleanAmount(billInfo.amount),
-          minimumPayment: cleanAmount(billInfo.minimumPayment),
-          dueDate: billInfo.dueDate || new Date(),
-          category: billInfo.category,
-          description: billInfo.description,
-          creditorPaymentAddress: billInfo.payeeAddress,
-          billType: "personal",
-          businessName: null,
-          extractedData: {
-            originalText: extractedText,
-            confidence: billInfo.confidence,
-            extractedFields: billInfo
-          },
-          isRecurring: false,
-          seriesId: null,
-          installmentNumber: null,
-          totalInstallments: null,
-          recurringType: null,
-          originalAmount: null
-        };
-
-        const bill = await storage.createBill({ ...billData, userId });
-        
-        // Create default reminders
-        await reminderService.createDefaultReminders(bill.id, bill.dueDate);
-        
-        res.json({
-          bill,
-          isRecurring: false,
-          extractedInfo: billInfo,
-          confidence: billInfo.confidence
-        });
-      }
+      res.json({
+        status: "success",
+        bills: sanitizedBills,
+        warnings: parsedDocument.warnings,
+        confidence: parsedDocument.confidence,
+      });
     } catch (error) {
       console.error("Error processing scanned document:", error);
       res.status(500).json({ error: "Failed to process document" });

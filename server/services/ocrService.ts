@@ -1,48 +1,50 @@
-import OpenAI from 'openai';
-
-const openaiApiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR;
-const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null;
+import Tesseract from 'tesseract.js';
+import pdf2pic from 'pdf2pic';
 
 export class OCRService {
-  async extractText(imageBuffer: Buffer): Promise<string> {
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+    let timer: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        reject(new Error(`${label} timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+    });
+
     try {
-      console.log('Starting OCR extraction using OpenAI Vision, buffer size:', imageBuffer.length);
+      return await Promise.race([promise, timeoutPromise]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  async extractText(imageBuffer: Buffer, mimeType: string): Promise<string> {
+    try {
+      console.log('Starting OCR extraction, buffer size:', imageBuffer.length, 'mimeType:', mimeType);
       
       if (!imageBuffer || imageBuffer.length === 0) {
         throw new Error('Invalid or empty image buffer');
       }
 
-      if (!openai) {
-        throw new Error('OpenAI API key not configured');
+      const allowedImageTypes = new Set([
+        'image/jpeg',
+        'image/png',
+        'image/webp'
+      ]);
+
+      if (!allowedImageTypes.has(mimeType)) {
+        throw new Error(`Unsupported image type: ${mimeType}`);
       }
 
-      // Convert buffer to base64
       const base64Image = imageBuffer.toString('base64');
-      
-      // Use gpt-4o-mini with vision capability to extract text from images
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image_url',
-                image_url: {
-                  url: `data:image/jpeg;base64,${base64Image}`,
-                },
-              },
-              {
-                type: 'text',
-                text: 'Please extract all text content from this image. Focus on capturing all readable text including numbers, dates, amounts, company names, account information, and any other text visible. Return just the extracted text without any explanation.',
-              },
-            ],
-          },
-        ],
+      const imageUrl = `data:${mimeType};base64,${base64Image}`;
+      const recognizeTask = Tesseract.recognize(imageUrl, 'eng', {
+        logger: () => undefined,
+        psm: 6,
+        oem: 1,
       });
 
-      const text = response.choices[0].message.content?.trim() || '';
-
+      const { data: { text } } = await this.withTimeout(recognizeTask, 10000, 'OCR extraction');
+      
       console.log('OCR extraction completed, extracted text length:', text.length);
       console.log('Sample extracted text (first 300 chars):', text.substring(0, 300));
       
@@ -56,7 +58,9 @@ export class OCRService {
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      // Provide more specific error messages
+      if (errorMessage.includes('timed out')) {
+        throw new Error('OCR timed out while processing the document. Please try a clearer image or a smaller PDF.');
+      }
       if (errorMessage.includes('Invalid or empty image buffer')) {
         throw new Error('Invalid image file. Please try a different image.');
       } else if (errorMessage.includes('No text could be extracted')) {
@@ -73,11 +77,16 @@ export class OCRService {
     confidence: number;
   }> {
     try {
-      const text = await this.extractText(imageBuffer);
+      const recognizeTask = Tesseract.recognize(imageBuffer, 'eng', {
+        logger: () => undefined,
+        psm: 6,
+        oem: 1,
+      });
+      const result = await this.withTimeout(recognizeTask, 10000, 'Enhanced OCR extraction');
       
       return {
-        text,
-        confidence: 0.85 // OpenAI Vision is highly accurate, use conservative estimate
+        text: result.data.text,
+        confidence: result.data.confidence / 100 // Convert to 0-1 scale
       };
     } catch (error) {
       console.error('Enhanced OCR extraction failed:', error);
@@ -98,7 +107,8 @@ export class OCRService {
       let directText = '';
       try {
         console.log('Attempting direct PDF text extraction...');
-        const pdfParse = require('pdf-parse');
+        const pdfParseModule = await import('pdf-parse');
+        const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
         const pdfData = await pdfParse(pdfBuffer);
         if (pdfData && pdfData.text && pdfData.text.trim().length > 10) {
           console.log('Successfully extracted text directly from PDF, pages:', pdfData.numpages || 1);
@@ -117,34 +127,82 @@ export class OCRService {
         console.log('Direct PDF text extraction failed:', directError?.message || 'Unknown error');
       }
 
-      // For scanned/image-based PDFs, we would need pdf2pic which has native dependencies
-      // In Vercel serverless, we can't use libraries with native deps. If direct text extraction
-      // didn't work, ask user to convert PDF to image format for OpenAI Vision processing
-      if (!directText || directText.trim().length < 10) {
-        console.log('PDF appears to be scanned/image-based. Direct text extraction failed or returned minimal text.');
-        throw new Error('This PDF appears to be scanned. Please convert it to PNG/JPG format and upload as an image for better accuracy.');
-      }
+      // Keep PDF OCR in a low-cost mode for Vercel/serverless deployments.
+      // We use direct text extraction first and only do OCR on the first page if needed.
+      console.log('Converting PDF to a single page image for OCR extraction...');
 
-      console.log('Direct PDF text extraction successful, returning extracted text');
-      return directText;
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const tmpDir = path.join(process.cwd(), 'tmp');
+        if (!fs.existsSync(tmpDir)) {
+          fs.mkdirSync(tmpDir, { recursive: true });
+        }
+
+        const convert = pdf2pic.fromBuffer(pdfBuffer, {
+          density: 180,
+          saveFilename: 'page',
+          savePath: tmpDir,
+          format: 'png',
+          width: 1200,
+          height: 1600,
+          quality: 80
+        });
+
+        const results = await this.withTimeout(convert.bulk(1, { responseType: 'buffer' }), 15000, 'PDF conversion');
+        if (!results || results.length === 0) {
+          throw new Error('Failed to convert PDF page to image - PDF may be corrupted or protected');
+        }
+
+        const firstPage = results.find(result => result.buffer && result.buffer.length > 0) ?? results[0];
+        if (!firstPage?.buffer || firstPage.buffer.length === 0) {
+          throw new Error('Converted PDF image is empty');
+        }
+
+        const pageText = await this.withTimeout(this.extractText(firstPage.buffer as Buffer, 'image/png'), 10000, 'PDF OCR');
+        if (pageText && pageText.trim()) {
+          const combinedText = `=== OCR EXTRACTED TEXT ===\n${pageText}\n`;
+          if (directText && directText.trim()) {
+            return '=== DIRECT PDF TEXT ===\n' + directText + '\n=== END DIRECT TEXT ===\n\n' + combinedText;
+          }
+          return combinedText;
+        }
+
+        throw new Error('No text could be extracted from PDF pages');
+      } catch (conversionError: any) {
+        console.error('PDF OCR fallback failed:', conversionError);
+
+        if (directText && directText.trim().length > 10) {
+          console.log('Using direct PDF text extraction after OCR fallback failure');
+          return directText;
+        }
+
+        throw new Error(`Failed to process PDF document: ${conversionError?.message || 'Unknown error'}`);
+      }
 
     } catch (error: any) {
       console.error('PDF processing failed:', error);
+      
+      // Final fallback: if we have any direct text, use it
+      if (directText && directText.trim().length > 10) {
+        console.log('PDF processing failed, but returning available direct text');
+        return directText;
+      }
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       if (errorMessage.includes('Invalid or empty PDF buffer')) {
         throw new Error('Invalid PDF file. Please try a different document.');
-      } else if (errorMessage.includes('scanned')) {
-        throw error; // Re-throw the specific scanned PDF error
+      } else if (errorMessage.includes('No text could be extracted from PDF pages')) {
+        throw new Error('No text found in PDF. Please ensure the document is clear and contains readable text.');
       }
       
-      throw new Error('Failed to process PDF document. Scanned PDFs are not supported in the deployed version. Please convert to image format (PNG/JPG) and try again.');
+      throw new Error('Failed to process PDF document. Please try a different file or convert to image format.');
     }
   }
 
   // Process multiple pages from image uploads
-  async extractTextFromMultipleImages(imageBuffers: Buffer[]): Promise<string> {
+  async extractTextFromMultipleImages(imageBuffers: Buffer[], mimeType: string = 'image/png'): Promise<string> {
     try {
       console.log(`Processing ${imageBuffers.length} images for multi-page document`);
       
@@ -158,7 +216,7 @@ export class OCRService {
         console.log(`Processing image ${i + 1} of ${imageBuffers.length}...`);
         
         try {
-          const pageText = await this.extractText(imageBuffers[i]);
+          const pageText = await this.extractText(imageBuffers[i], mimeType);
           combinedText += `\n--- Page ${i + 1} ---\n${pageText}\n`;
         } catch (pageError) {
           console.warn(`Failed to extract text from image ${i + 1}:`, pageError);
@@ -188,7 +246,7 @@ export class OCRService {
       if (mimeType === 'application/pdf') {
         return await this.extractTextFromPDF(buffer);
       } else if (mimeType.startsWith('image/')) {
-        return await this.extractText(buffer);
+        return await this.extractText(buffer, mimeType);
       } else {
         throw new Error(`Unsupported document type: ${mimeType}`);
       }
