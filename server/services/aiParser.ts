@@ -296,92 +296,111 @@ export class AIParserService {
     return matches;
   }
 
-  private async parseSingleBillSection(extractedText: string): Promise<ParsedBillInfo[]> {
-    try {
-      if (!extractedText || extractedText.trim().length === 0) {
-        throw new Error("No text provided for AI parsing");
-      }
-
-      const installmentRows = this.parseInstallmentRows(extractedText);
-      if (installmentRows.length > 0) {
-        return installmentRows;
-      }
-const labeledBill = this.parseLabeledBill(extractedText);
-
-if (
-  labeledBill &&
-  labeledBill.company &&
-  labeledBill.amount &&
-  labeledBill.dueDate &&
-  labeledBill.confidence >= 0.9
-) {
-  console.log({
-    stage: "deterministic-parser",
-    matched: true,
-    confidence: labeledBill.confidence,
-  });
-
-  return [labeledBill];
-}
-      if (!openai) {
-        throw new Error("OpenAI is not configured yet");
-      }
-
-      const response = await openai.chat.completions.create({
-        model: "gpt-5",
-        messages: [
-          {
-            role: "system",
-            content: `You are parsing extracted OCR text from uploaded bills. The uploaded document may contain one bill or multiple independent bills. Identify every distinct bill. Do not merge separate companies/accounts into one bill. A single bill may span multiple pages, so do not assume every page is a separate bill. Use issuer/company, account number, invoice number, statement period, and document headers to determine bill boundaries. Return valid JSON with a top-level "bills" array. Each item should match the ParsedBillInfo shape. If a field is unknown, use null.`
-          },
-          {
-            role: "user",
-            content: extractedText
-          }
-        ],
-        response_format: { type: "json_object" },
-      });
-
-      const parsed = JSON.parse(response.choices[0]?.message?.content || "{}") as any;
-      const candidates = Array.isArray(parsed?.bills) ? parsed.bills : [parsed];
-      const normalized = candidates
-        .map((item: any) => this.normalizeBill(item))
-        .filter((item) => item && (item.company || item.amount || item.description || item.dueDate));
-
-      if (normalized.length > 0) {
-  return normalized;
-}
-
-const fallbackLabeledBill =
-  this.parseLabeledBill(extractedText);
-
-if (fallbackLabeledBill) {
-  return [fallbackLabeledBill];
-}
-    } catch (error) {
-      console.error({
-        stage: "ai-parser",
-        errorName: error instanceof Error ? error.name : "unknown",
-        errorMessage: error instanceof Error ? error.message : String(error),
-        extractedTextLength: extractedText?.length ?? 0,
-      });
-
-      const fallbackBills =
-  this.parseInstallmentRows(extractedText);
-
-if (fallbackBills.length > 0) {
-  return fallbackBills;
-}
-
-const labeledBill =
-  this.parseLabeledBill(extractedText);
-
-if (labeledBill) {
-  return [labeledBill];
-}
-
-return [];
+    private async parseSingleBillSection(
+    extractedText: string
+  ): Promise<ParsedBillInfo[]> {
+    if (!extractedText || extractedText.trim().length === 0) {
+      return [];
     }
+
+    // First: detect multiple installment/payment-plan rows.
+    const installmentRows = this.parseInstallmentRows(extractedText);
+
+    if (installmentRows.length > 0) {
+      return installmentRows;
+    }
+
+    // Second: try the fast deterministic parser.
+    const deterministicBill = this.parseLabeledBill(extractedText);
+
+    if (
+      deterministicBill &&
+      deterministicBill.company &&
+      deterministicBill.amount &&
+      deterministicBill.dueDate &&
+      deterministicBill.confidence >= 0.9
+    ) {
+      console.log({
+        stage: "deterministic-parser",
+        matched: true,
+        confidence: deterministicBill.confidence,
+      });
+
+      return [deterministicBill];
+    }
+
+    // Third: use OpenAI only when deterministic parsing
+    // could not confidently identify the bill.
+    if (openai) {
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-5",
+          messages: [
+            {
+              role: "system",
+              content:
+                `You are parsing extracted OCR text from uploaded bills. ` +
+                `The uploaded document may contain one bill or multiple independent bills. ` +
+                `Identify every distinct bill. Do not merge separate companies/accounts into one bill. ` +
+                `A single bill may span multiple pages, so do not assume every page is a separate bill. ` +
+                `Use issuer/company, account number, invoice number, statement period, and document headers ` +
+                `to determine bill boundaries. Return valid JSON with a top-level "bills" array. ` +
+                `Each item should match the ParsedBillInfo shape. ` +
+                `If a field is unknown, use null.`,
+            },
+            {
+              role: "user",
+              content: extractedText,
+            },
+          ],
+          response_format: { type: "json_object" },
+        });
+
+        const parsed = JSON.parse(
+          response.choices[0]?.message?.content || "{}"
+        ) as any;
+
+        const candidates = Array.isArray(parsed?.bills)
+          ? parsed.bills
+          : [parsed];
+
+        const normalized = candidates
+          .map((item: any) => this.normalizeBill(item))
+          .filter(
+            (item) =>
+              item &&
+              (
+                item.company ||
+                item.amount ||
+                item.description ||
+                item.dueDate
+              )
+          );
+
+        if (normalized.length > 0) {
+          return normalized;
+        }
+      } catch (error) {
+        console.error({
+          stage: "ai-parser",
+          errorName:
+            error instanceof Error ? error.name : "unknown",
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : String(error),
+          extractedTextLength: extractedText.length,
+        });
+      }
+    }
+
+    // Final fallback: keep a partially detected bill if one exists.
+    if (deterministicBill) {
+      return [deterministicBill];
+    }
+
+    // This function must ALWAYS return an array.
+    return [];
   }
 
   async parseBillInformation(extractedDocument: string): Promise<ParsedBillDocument> {
