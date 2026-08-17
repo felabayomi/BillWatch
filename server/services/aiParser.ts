@@ -55,6 +55,95 @@ export interface RecurringBillSeries {
 }
 
 export class AIParserService {
+  private parseLabeledBill(text: string): ParsedBillInfo | null {
+  if (!text || !text.trim()) {
+    return null;
+  }
+
+  const normalized = text.replace(/\r/g, "");
+
+  const companyPatterns = [
+    /Bill issued by:\s*([^,\n]+)/i,
+    /payable to\s+([A-Za-z0-9 .&'-]+)/i,
+    /\b(Potomac Edison)\b/i,
+  ];
+
+  let company: string | null = null;
+
+  for (const pattern of companyPatterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      company = match[1].trim();
+      break;
+    }
+  }
+
+  const amountPatterns = [
+    /Amount Due(?:\s+by\s+[A-Za-z]{3}\s+\d{1,2},\s+\d{4})?\s*:?\s*\$?\s*([\d,]+\.\d{2})/i,
+    /Total Current Charges\s+\$?\s*([\d,]+\.\d{2})/i,
+    /Please Pay\s+\$?\s*([\d,]+\.\d{2})/i,
+  ];
+
+  let amount: string | null = null;
+
+  for (const pattern of amountPatterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      amount = match[1].replace(/,/g, "");
+      break;
+    }
+  }
+
+  const dueDatePatterns = [
+    /Due Date\s*:?\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
+    /Amount Due by\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/i,
+  ];
+
+  let dueDate: Date | null = null;
+
+  for (const pattern of dueDatePatterns) {
+    const match = normalized.match(pattern);
+    if (match?.[1]) {
+      dueDate = this.parseLocalDate(match[1]);
+      if (dueDate) break;
+    }
+  }
+
+  const accountMatch =
+    normalized.match(
+      /Account Number\s*:?\s*([0-9][0-9\s-]{4,})/i
+    );
+
+  const accountNumber = accountMatch?.[1]
+    ? accountMatch[1].trim().replace(/\s+/g, " ")
+    : null;
+
+  if (!company && !amount && !dueDate && !accountNumber) {
+    return null;
+  }
+
+  return {
+    company,
+    accountNumber,
+    amount,
+    minimumPayment: null,
+    dueDate,
+    category: "Utilities",
+    description: company
+      ? `${company} utility bill`
+      : "Utility bill",
+    confidence:
+      company && amount && dueDate
+        ? 0.95
+        : 0.7,
+    payeeAddress: null,
+    isRecurring: true,
+    recurringType: "monthly",
+    installments: null,
+    totalInstallments: null,
+    originalAmount: null,
+  };
+}
   private parseLocalDate(dateString?: string | null): Date | null {
     if (!dateString) {
       return null;
@@ -243,7 +332,16 @@ export class AIParserService {
         .map((item: any) => this.normalizeBill(item))
         .filter((item) => item && (item.company || item.amount || item.description || item.dueDate));
 
-      return normalized;
+      if (normalized.length > 0) {
+  return normalized;
+}
+
+const labeledBill =
+  this.parseLabeledBill(extractedText);
+
+return labeledBill
+  ? [labeledBill]
+  : [];
     } catch (error) {
       console.error({
         stage: "ai-parser",
@@ -252,12 +350,21 @@ export class AIParserService {
         extractedTextLength: extractedText?.length ?? 0,
       });
 
-      const fallbackBills = this.parseInstallmentRows(extractedText);
-      if (fallbackBills.length > 0) {
-        return fallbackBills;
-      }
+      const fallbackBills =
+  this.parseInstallmentRows(extractedText);
 
-      return [];
+if (fallbackBills.length > 0) {
+  return fallbackBills;
+}
+
+const labeledBill =
+  this.parseLabeledBill(extractedText);
+
+if (labeledBill) {
+  return [labeledBill];
+}
+
+return [];
     }
   }
 

@@ -1325,7 +1325,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...billInfo,
         amount: cleanAmount(billInfo.amount),
         minimumPayment: cleanAmount(billInfo.minimumPayment),
-        dueDate: billInfo.dueDate ?? null,
+        dueDate:
+  billInfo.dueDate instanceof Date
+    ? [
+        billInfo.dueDate.getFullYear(),
+        String(billInfo.dueDate.getMonth() + 1).padStart(2, "0"),
+        String(billInfo.dueDate.getDate()).padStart(2, "0"),
+      ].join("-")
+    : billInfo.dueDate ?? null,
         originalAmount: cleanAmount(billInfo.originalAmount),
       }));
 
