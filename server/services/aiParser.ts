@@ -352,12 +352,12 @@ if (
   return normalized;
 }
 
-const labeledBill =
+const fallbackLabeledBill =
   this.parseLabeledBill(extractedText);
 
-return labeledBill
-  ? [labeledBill]
-  : [];
+if (fallbackLabeledBill) {
+  return [fallbackLabeledBill];
+}
     } catch (error) {
       console.error({
         stage: "ai-parser",
