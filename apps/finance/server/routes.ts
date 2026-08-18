@@ -7,7 +7,6 @@ import { insertAccountSchema, insertBillSchema, insertTransactionSchema, insertC
 import { isAuthenticated } from "../../../server/auth.js";
 import { z } from "zod";
 import OpenAI from "openai";
-import { PDFParse } from "pdf-parse";
 import { ObjectStorageService } from "./replit_integrations/object_storage";
 
 function getLocalDateString(): string {
@@ -155,10 +154,13 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
       const isPdf = req.file.mimetype === 'application/pdf';
 
       if (isPdf) {
+        const { PDFParse } = await import("pdf-parse");
         const uint8 = new Uint8Array(req.file.buffer);
         const parser = new PDFParse(uint8);
         const pdfResult = await parser.getText();
-        const pdfText = pdfResult.pages.map((p: any) => p.text).join('\n');
+        const pdfText = pdfResult.pages
+          .map((p: any) => p.text)
+          .join("\n");
 
         const response = await openai.chat.completions.create({
           model: "gpt-5.2",
@@ -271,10 +273,13 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
         const isPdf = file.mimetype === 'application/pdf';
 
         if (isPdf) {
+          const { PDFParse } = await import("pdf-parse");
           const uint8 = new Uint8Array(file.buffer);
           const parser = new PDFParse(uint8);
           const pdfResult = await parser.getText();
-          const pdfText = pdfResult.pages.map((p: any) => p.text).join('\n');
+          const pdfText = pdfResult.pages
+            .map((p: any) => p.text)
+            .join("\n");
 
           const response = await openai.chat.completions.create({
             model: "gpt-5.2",
