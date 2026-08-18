@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { type AccountWithBalance, inferCategory } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Input } from "@finance/components/ui/input";
+import { type AccountWithBalance, inferCategory } from "@finance-shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
 import { Link } from "wouter";
-import { formatCurrency, getCurrencyColor, getLocalISODate } from "@/lib/format";
+import { formatCurrency, getCurrencyColor, getLocalISODate } from "@finance/lib/format";
 import { ArrowLeft, Save, Check } from "lucide-react";
 
 export default function BalanceCorrection() {
@@ -19,9 +19,9 @@ export default function BalanceCorrection() {
   const [savedAccounts, setSavedAccounts] = useState<Set<string>>(new Set());
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", today],
+    queryKey: ["/api/finance/accounts", today],
     queryFn: async () => {
-      const response = await fetch(`/api/accounts?date=${today}`, {
+      const response = await fetch(`/api/finance/accounts?date=${today}`, {
         credentials: 'include',
         headers: { 'Accept': 'application/json' },
       });
@@ -58,14 +58,14 @@ export default function BalanceCorrection() {
         correctBalanceCents: Math.round(parseFloat(value) * 100),
       }));
 
-      const response = await apiRequest("POST", "/api/accounts/bulk-set-balance", {
+      const response = await apiRequest("POST", "/api/finance/accounts/bulk-set-balance", {
         corrections: correctionData,
         date: today,
       });
 
       const result = await response.json();
-      await queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/accounts"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/finance/accounts"] });
 
       const correctedCount = result.results?.filter((r: any) => !r.skipped).length || 0;
       const newSaved = new Set(savedAccounts);

@@ -1,223 +1,474 @@
-import { db } from './db.js';
-import { bills, users, accounts } from '../shared/schema.js';
-import { eq } from 'drizzle-orm';
+import { db } from "./db.js";
+import { bills, users } from "../shared/schema.js";
+import { eq } from "drizzle-orm";
 
-function getApiUrl(): string {
-  return process.env.FINANCE_WATCH_API_URL || '';
+import { storage as financeStorage } from "../apps/finance/server/storage.js";
+
+interface SyncResult {
+  success: boolean;
+  error?: string;
+  transactionId?: string;
+  duplicate?: boolean;
 }
 
-function getApiKey(): string {
-  return process.env.FINANCE_WATCH_API_KEY || '';
+function getLocalDateString(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
-interface FinanceWatchPayload {
-  email: string;
-  amount: number;
-  description: string;
-  date: string;
-  accountName: string;
-  categoryName: string;
-  isBusinessExpense: boolean;
-  businessName?: string;
-  receiptUrl?: string;
-}
-
-interface FinanceWatchAccountData {
-  accounts: string[];
-  categories: string[];
-}
-
-const accountDataCache = new Map<string, { data: FinanceWatchAccountData; fetchedAt: number }>();
-const CACHE_TTL = 5 * 60 * 1000;
-
-async function fetchAccountData(email: string): Promise<FinanceWatchAccountData | null> {
-  const apiUrl = getApiUrl();
-  if (!apiUrl) return null;
-
-  const cached = accountDataCache.get(email);
-  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL) {
-    return cached.data;
+function normalizeDate(value: unknown): string {
+  if (!value) {
+    return getLocalDateString();
   }
 
   try {
-    const url = `${apiUrl.replace(/\/$/, '')}/api/sync/accounts?email=${encodeURIComponent(email)}`;
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'X-Api-Key': getApiKey(),
-      },
-    });
+    const date = new Date(value as string | number | Date);
 
-    if (!response.ok) {
-      console.log(`⚠️ Finance Watch: Could not fetch accounts for ${email} - ${response.status}`);
-      return null;
+    if (Number.isNaN(date.getTime())) {
+      return getLocalDateString();
     }
 
-    const data = await response.json();
-    const accountData: FinanceWatchAccountData = {
-      accounts: Array.isArray(data.accounts) ? data.accounts.map((a: any) => typeof a === 'string' ? a : a.name || a.accountName || '') : [],
-      categories: Array.isArray(data.categories) ? data.categories.map((c: any) => typeof c === 'string' ? c : c.name || c.categoryName || '') : [],
-    };
-
-    accountDataCache.set(email, { data: accountData, fetchedAt: Date.now() });
-    console.log(`📋 Finance Watch: Fetched ${accountData.accounts.length} accounts, ${accountData.categories.length} categories for ${email}`);
-    return accountData;
-  } catch (error: any) {
-    console.error(`⚠️ Finance Watch: Error fetching account data:`, error.message);
-    return null;
+    return date.toISOString().split("T")[0];
+  } catch {
+    return getLocalDateString();
   }
 }
 
-function findBestMatch(value: string, options: string[]): string | null {
-  if (!value || options.length === 0) return null;
-  const lower = value.toLowerCase();
-  const exact = options.find(o => o.toLowerCase() === lower);
-  if (exact) return exact;
-  const partial = options.find(o => o.toLowerCase().includes(lower) || lower.includes(o.toLowerCase()));
-  if (partial) return partial;
-  return null;
+function normalizeAmount(value: unknown): number {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (typeof value === "string") {
+    const cleaned = value.replace(/[$,\s]/g, "");
+    const parsed = Number.parseFloat(cleaned);
+
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
 }
 
-function buildPayload(bill: any, userEmail: string, accountData: FinanceWatchAccountData | null, localAccounts: string[]): FinanceWatchPayload {
-  const paidAmount = bill.paidAmount ? parseFloat(bill.paidAmount) : parseFloat(bill.amount);
-  const paidDate = bill.paidDate ? new Date(bill.paidDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-  const rawDescription = `${bill.company}${bill.description ? ' - ' + bill.description : ''}`;
-  const description = rawDescription.length > 200 ? rawDescription.substring(0, 197) + '...' : rawDescription;
-
-  let accountName = bill.paymentMethod || 'BillWatch Payment';
-  let categoryName = bill.category || 'Synced Bill Payment';
-
-  if (localAccounts.length > 0) {
-    const localMatch = findBestMatch(accountName, localAccounts);
-    if (localMatch) {
-      accountName = localMatch;
-    } else {
-      accountName = localAccounts[0];
-    }
+function findBestAccount(
+  paymentMethod: string | null | undefined,
+  accounts: any[],
+) {
+  if (!accounts.length) {
+    return undefined;
   }
 
-  if (accountData) {
-    const matchedAccount = findBestMatch(accountName, accountData.accounts);
-    if (matchedAccount) {
-      accountName = matchedAccount;
-    }
-
-    const matchedCategory = findBestMatch(categoryName, accountData.categories);
-    if (matchedCategory) {
-      categoryName = matchedCategory;
-    }
+  if (!paymentMethod) {
+    return accounts[0];
   }
 
-  const payload: FinanceWatchPayload = {
-    email: userEmail,
-    amount: paidAmount,
-    description: description,
-    date: paidDate,
-    accountName: accountName,
-    categoryName: categoryName,
-    isBusinessExpense: bill.billType === 'business',
-  };
+  const normalizedPaymentMethod = paymentMethod
+    .trim()
+    .toLowerCase();
 
-  if (bill.billType === 'business' && bill.businessName) {
-    payload.businessName = bill.businessName;
+  const exact = accounts.find(
+    (account) =>
+      account.name?.trim().toLowerCase() ===
+      normalizedPaymentMethod,
+  );
+
+  if (exact) {
+    return exact;
   }
 
-  const receiptPath = bill.receiptUrl || bill.invoiceUrl;
-  if (receiptPath) {
-    const appUrl = process.env.APP_URL;
-    if (appUrl) {
-      payload.receiptUrl = new URL(receiptPath, appUrl).href;
-    }
-  }
+  const partial = accounts.find((account) => {
+    const accountName =
+      account.name?.trim().toLowerCase() || "";
 
-  return payload;
+    return (
+      accountName.includes(normalizedPaymentMethod) ||
+      normalizedPaymentMethod.includes(accountName)
+    );
+  });
+
+  return partial || accounts[0];
 }
 
-export async function syncPaidBillToFinanceWatch(billId: string): Promise<{ success: boolean; error?: string }> {
+async function findOrCreateCategory(
+  userId: string,
+  categoryName: string | null | undefined,
+) {
+  const requestedName =
+    categoryName?.trim() || "Bill Payment";
+
+  let category =
+    await financeStorage.getCategoryByName(
+      userId,
+      requestedName,
+    );
+
+  if (category) {
+    return category;
+  }
+
+  // Prefer an existing bill/expense category if the exact
+  // BillWatch category does not exist.
+  const categories =
+    await financeStorage.getCategories(userId);
+
+  category = categories.find(
+    (item: any) =>
+      item.kind === "bill" ||
+      item.kind === "expense",
+  );
+
+  if (category) {
+    return category;
+  }
+
+  return financeStorage.createCategory(userId, {
+    name: requestedName,
+    kind: "bill",
+  });
+}
+
+export async function syncPaidBillToFinanceWatch(
+  billId: string,
+): Promise<SyncResult> {
   try {
-    const [bill] = await db.select().from(bills).where(eq(bills.id, billId));
+    /*
+     * ------------------------------------------------------
+     * 1. Load the BillWatch bill
+     * ------------------------------------------------------
+     */
+
+    const [bill] = await db
+      .select()
+      .from(bills)
+      .where(eq(bills.id, billId))
+      .limit(1);
 
     if (!bill) {
-      console.log(`⚠️ Finance Watch Sync: Bill ${billId} not found`);
-      return { success: false, error: 'Bill not found' };
+      console.warn(
+        `[finance-sync] Bill not found: ${billId}`,
+      );
+
+      return {
+        success: false,
+        error: "Bill not found",
+      };
     }
 
-    if (bill.status !== 'paid') {
-      console.log(`⚠️ Finance Watch Sync: Bill ${billId} is not paid (status: ${bill.status}), skipping`);
-      return { success: false, error: 'Bill is not paid' };
+    if (bill.status !== "paid") {
+      console.warn(
+        `[finance-sync] Bill ${billId} is not paid. Current status: ${bill.status}`,
+      );
+
+      return {
+        success: false,
+        error: "Bill is not paid",
+      };
     }
 
-    const [user] = await db.select().from(users).where(eq(users.id, bill.userId));
-    if (!user?.email) {
-      console.log(`⚠️ Finance Watch Sync: No email found for user ${bill.userId}`);
-      return { success: false, error: 'User email not found' };
+    /*
+     * ------------------------------------------------------
+     * 2. Resolve the BillWatch user
+     * ------------------------------------------------------
+     */
+
+    const [billWatchUser] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, bill.userId))
+      .limit(1);
+
+    if (!billWatchUser?.email) {
+      console.warn(
+        `[finance-sync] No email found for BillWatch user ${bill.userId}`,
+      );
+
+      return {
+        success: false,
+        error: "User email not found",
+      };
     }
 
-    const apiUrl = getApiUrl();
+    /*
+     * ------------------------------------------------------
+     * 3. Resolve the matching FinanceWatch user
+     *
+     * Both applications use the same authenticated Clerk
+     * identity, but email gives us a safe fallback.
+     * ------------------------------------------------------
+     */
 
-    const localAccountRecords = await db.select().from(accounts).where(eq(accounts.userId, bill.userId));
-    const localAccountNames = localAccountRecords.map(a => a.name);
+    let financeUser =
+      await financeStorage.getUser(bill.userId);
 
-    const accountData = apiUrl ? await fetchAccountData(user.email) : null;
-    const payload = buildPayload(bill, user.email, accountData, localAccountNames);
+    if (!financeUser) {
+      financeUser =
+        await financeStorage.getUserByEmail(
+          billWatchUser.email,
+        );
+    }
 
-    if (!apiUrl) {
-      console.log(`📤 Finance Watch Sync: No API URL configured. Bill ${billId} data ready for sync when URL is set.`);
-      console.log(`📤 Payload:`, JSON.stringify(payload, null, 2));
-      await db.update(bills).set({
+    if (!financeUser) {
+      /*
+       * FinanceWatch may not have initialized this user yet.
+       * Create the FinanceWatch user using the same identity.
+       */
+
+      financeUser =
+        await financeStorage.upsertUser({
+          id: bill.userId,
+          email: billWatchUser.email,
+          firstName: billWatchUser.firstName ?? null,
+          lastName: billWatchUser.lastName ?? null,
+          profileImageUrl:
+            billWatchUser.profileImageUrl ?? null,
+        });
+
+      await financeStorage.initializeDefaultCategories(
+        financeUser.id,
+      );
+    }
+
+    const financeUserId = financeUser.id;
+
+    /*
+     * ------------------------------------------------------
+     * 4. Prevent duplicate BillWatch -> FinanceWatch sync
+     * ------------------------------------------------------
+     *
+     * externalSourceId allows FinanceWatch to know that this
+     * transaction originated from this specific BillWatch bill.
+     */
+
+    const externalSourceId = `billwatch:${bill.id}`;
+
+    const existingTransaction =
+      await financeStorage.getTransactionByExternalSourceId(
+        financeUserId,
+        externalSourceId,
+      );
+
+    if (existingTransaction) {
+      console.log(
+        `[finance-sync] Bill ${bill.id} already exists in FinanceWatch as transaction ${existingTransaction.id}`,
+      );
+
+      if (!bill.financeWatchSynced) {
+        await db
+          .update(bills)
+          .set({
+            financeWatchSynced: true,
+            financeWatchSyncedAt: new Date(),
+          })
+          .where(eq(bills.id, bill.id));
+      }
+
+      return {
+        success: true,
+        transactionId: existingTransaction.id,
+        duplicate: true,
+      };
+    }
+
+    /*
+     * ------------------------------------------------------
+     * 5. Get the user's FinanceWatch accounts
+     * ------------------------------------------------------
+     */
+
+    const financeAccounts =
+      await financeStorage.getAccounts(financeUserId);
+
+    if (!financeAccounts.length) {
+      console.warn(
+        `[finance-sync] FinanceWatch user ${financeUserId} has no accounts. Cannot sync BillWatch bill ${bill.id}.`,
+      );
+
+      return {
+        success: false,
+        error:
+          "No FinanceWatch accounts exist for this user",
+      };
+    }
+
+    /*
+     * ------------------------------------------------------
+     * 6. Determine which FinanceWatch account receives it
+     * ------------------------------------------------------
+     */
+
+    const targetAccount = findBestAccount(
+      bill.paymentMethod,
+      financeAccounts,
+    );
+
+    if (!targetAccount) {
+      return {
+        success: false,
+        error: "Unable to determine FinanceWatch account",
+      };
+    }
+
+    /*
+     * ------------------------------------------------------
+     * 7. Determine FinanceWatch category
+     * ------------------------------------------------------
+     */
+
+    const category =
+      await findOrCreateCategory(
+        financeUserId,
+        bill.category,
+      );
+
+    /*
+     * ------------------------------------------------------
+     * 8. Determine amount/date
+     * ------------------------------------------------------
+     */
+
+    const amount = normalizeAmount(
+      bill.paidAmount ?? bill.amount,
+    );
+
+    if (amount <= 0) {
+      console.warn(
+        `[finance-sync] Invalid amount for BillWatch bill ${bill.id}:`,
+        bill.paidAmount ?? bill.amount,
+      );
+
+      return {
+        success: false,
+        error: "Bill payment amount is invalid",
+      };
+    }
+
+    const amountCents = Math.round(amount * 100);
+
+    const txDate = normalizeDate(
+      bill.paidDate ?? new Date(),
+    );
+
+    const company =
+      bill.company?.trim() || "Bill payment";
+
+    const description = bill.description
+      ? `${company} - ${bill.description}`
+      : company;
+
+    /*
+     * ------------------------------------------------------
+     * 9. Create FinanceWatch transaction
+     *
+     * Expenses are stored as negative values.
+     * ------------------------------------------------------
+     */
+
+    const transaction =
+      await financeStorage.createTransaction(
+        financeUserId,
+        {
+          accountId: targetAccount.id,
+          amountCents: -Math.abs(amountCents),
+          txDate,
+          description,
+          categoryId: category.id,
+
+          isBusinessExpense:
+            bill.billType === "business",
+
+          isPersonal:
+            bill.billType !== "business",
+
+          externalSourceId,
+        },
+      );
+
+    /*
+     * ------------------------------------------------------
+     * 10. Mark BillWatch bill as synchronized
+     * ------------------------------------------------------
+     */
+
+    await db
+      .update(bills)
+      .set({
         financeWatchSynced: true,
         financeWatchSyncedAt: new Date(),
-      }).where(eq(bills.id, billId));
-      return { success: true };
-    }
+      })
+      .where(eq(bills.id, bill.id));
 
-    const syncUrl = `${apiUrl.replace(/\/$/, '')}/api/sync/bill-payments`;
-
-    console.log(`📤 Finance Watch Sync: Sending bill ${billId} (${bill.company} - $${bill.amount}) to ${syncUrl}${payload.receiptUrl ? ' (with receipt)' : ''}`);
-
-    const response = await fetch(syncUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Api-Key': getApiKey(),
+    console.log(
+      `[finance-sync] Created FinanceWatch transaction from BillWatch`,
+      {
+        billId: bill.id,
+        transactionId: transaction.id,
+        userId: financeUserId,
+        account: targetAccount.name,
+        amountCents: -Math.abs(amountCents),
+        date: txDate,
       },
-      body: JSON.stringify(payload),
-    });
+    );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Finance Watch Sync: Failed for bill ${billId} - ${response.status}: ${errorText}`);
-      return { success: false, error: `API error: ${response.status} ${errorText}` };
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+    };
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error);
 
-    await db.update(bills).set({
-      financeWatchSynced: true,
-      financeWatchSyncedAt: new Date(),
-    }).where(eq(bills.id, billId));
+    console.error(
+      `[finance-sync] Failed to sync BillWatch bill ${billId}:`,
+      error,
+    );
 
-    console.log(`✅ Finance Watch Sync: Bill ${billId} (${bill.company}) synced successfully`);
-    return { success: true };
-  } catch (error: any) {
-    console.error(`❌ Finance Watch Sync Error for bill ${billId}:`, error.message);
-    return { success: false, error: error.message };
+    return {
+      success: false,
+      error: message,
+    };
   }
 }
 
-export async function syncMultipleBillsToFinanceWatch(billIds: string[]): Promise<{ synced: number; failed: number; errors: string[] }> {
+export async function syncMultipleBillsToFinanceWatch(
+  billIds: string[],
+): Promise<{
+  synced: number;
+  failed: number;
+  errors: string[];
+}> {
   let synced = 0;
   let failed = 0;
   const errors: string[] = [];
 
   for (const billId of billIds) {
-    const result = await syncPaidBillToFinanceWatch(billId);
+    const result =
+      await syncPaidBillToFinanceWatch(billId);
+
     if (result.success) {
-      synced++;
+      synced += 1;
     } else {
-      failed++;
-      if (result.error) errors.push(`${billId}: ${result.error}`);
+      failed += 1;
+
+      if (result.error) {
+        errors.push(
+          `${billId}: ${result.error}`,
+        );
+      }
     }
   }
 
-  console.log(`📊 Finance Watch Bulk Sync: ${synced} synced, ${failed} failed`);
-  return { synced, failed, errors };
+  console.log(
+    `[finance-sync] Bulk sync complete: ${synced} synced, ${failed} failed`,
+  );
+
+  return {
+    synced,
+    failed,
+    errors,
+  };
 }

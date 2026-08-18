@@ -1,16 +1,14 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Router } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { insertAccountSchema, insertBillSchema, insertTransactionSchema, insertCategorySchema } from "@shared/schema";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { verifyMembershipCached, getTierForTool } from "./membership";
+import { insertAccountSchema, insertBillSchema, insertTransactionSchema, insertCategorySchema } from "../shared/schema";
+import { isAuthenticated } from "../../../server/auth.js";
 import { z } from "zod";
 import OpenAI from "openai";
 import { PDFParse } from "pdf-parse";
-import { registerObjectStorageRoutes, ObjectStorageService } from "./replit_integrations/object_storage";
+import { ObjectStorageService } from "./replit_integrations/object_storage";
 
 function getLocalDateString(): string {
   const now = new Date();
@@ -25,7 +23,7 @@ function clampToLocalDate(dateStr: string): string {
   return dateStr > today ? today : dateStr;
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerFinanceRoutes(router: Router): Promise<void> {
   // File upload middleware
   const upload = multer({
     storage: multer.memoryStorage(),
@@ -41,14 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   });
-
-  // Auth middleware
-  await setupAuth(app);
-
-  // Object storage routes for receipt file uploads
-  registerObjectStorageRoutes(app);
-
-  app.use('/api', (req, res, next) => {
+router.use( (req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
@@ -57,7 +48,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  router.get('/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       let user = await storage.getUser(userId);
@@ -83,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout route
-  app.get('/api/logout', (req, res) => {
+  router.get('/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
         console.error("Logout error:", err);
@@ -99,7 +90,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
   });
-  app.get("/api/membership/check", isAuthenticated, async (req: any, res) => {
+  router.get("/membership/check", isAuthenticated, async (req: any, res) => {
     try {
       const email = req.user?.claims?.email;
 
@@ -140,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Receipt/Invoice parsing with AI vision (images) or text extraction (PDFs)
-  app.post("/api/parse-receipt", isAuthenticated, upload.single('receipt'), async (req: any, res) => {
+  router.post("/parse-receipt", isAuthenticated, upload.single('receipt'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -251,7 +242,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/parse-receipts-batch", isAuthenticated, upload.array('receipts', 10), async (req: any, res) => {
+  router.post("/parse-receipts-batch", isAuthenticated, upload.array('receipts', 10), async (req: any, res) => {
     try {
       const files = req.files as Express.Multer.File[];
       if (!files || files.length === 0) {
@@ -389,7 +380,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Accounts
-  app.get("/api/accounts", isAuthenticated, async (req, res) => {
+  router.get("/accounts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const date = req.query.date as string;
@@ -416,7 +407,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Support both /api/accounts/:date and /api/accounts/:id patterns  
-  app.get("/api/accounts/:dateOrId", isAuthenticated, async (req, res) => {
+  router.get("/accounts/:dateOrId", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const param = req.params.dateOrId;
@@ -439,7 +430,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/accounts", isAuthenticated, async (req, res) => {
+  router.post("/accounts", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertAccountSchema.parse(req.body);
@@ -451,7 +442,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Bulk account creation for document scanner
-  app.post("/api/accounts/bulk", isAuthenticated, async (req, res) => {
+  router.post("/accounts/bulk", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const { accounts } = req.body;
@@ -504,7 +495,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.put("/api/accounts/:id", isAuthenticated, async (req, res) => {
+  router.put("/accounts/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertAccountSchema.partial().parse(req.body);
@@ -518,7 +509,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.patch("/api/accounts/:id", isAuthenticated, async (req, res) => {
+  router.patch("/accounts/:id", isAuthenticated, async (req, res) => {
     console.log('🔄 PATCH /api/accounts/:id called');
     console.log('Request details:', {
       params: req.params,
@@ -561,7 +552,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/accounts/:id", isAuthenticated, async (req, res) => {
+  router.delete("/accounts/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const success = await storage.deleteAccount(userId, req.params.id);
@@ -575,7 +566,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Migrate account categories
-  app.post("/api/accounts/migrate-categories", isAuthenticated, async (req, res) => {
+  router.post("/accounts/migrate-categories", isAuthenticated, async (req, res) => {
     try {
       const result = await storage.migrateAccountCategories();
       res.json({
@@ -589,7 +580,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Categories
-  app.get("/api/categories", isAuthenticated, async (req, res) => {
+  router.get("/categories", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const categories = await storage.getCategories(userId);
@@ -599,7 +590,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/categories", isAuthenticated, async (req, res) => {
+  router.post("/categories", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       // Only validate the fields coming from the client (name and kind)
@@ -614,7 +605,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.put("/api/categories/:id", isAuthenticated, async (req, res) => {
+  router.put("/categories/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertCategorySchema.partial().parse(req.body);
@@ -628,7 +619,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/categories/:id", isAuthenticated, async (req, res) => {
+  router.delete("/categories/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const success = await storage.deleteCategory(userId, req.params.id);
@@ -642,7 +633,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Businesses
-  app.get("/api/businesses", isAuthenticated, async (req, res) => {
+  router.get("/businesses", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const businessList = await storage.getBusinesses(userId);
@@ -652,7 +643,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/businesses", isAuthenticated, async (req, res) => {
+  router.post("/businesses", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const schema = z.object({
@@ -669,7 +660,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/businesses/:id", isAuthenticated, async (req, res) => {
+  router.delete("/businesses/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const success = await storage.deleteBusiness(userId, req.params.id);
@@ -683,7 +674,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Bills
-  app.get("/api/bills", isAuthenticated, async (req, res) => {
+  router.get("/bills", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const bills = await storage.getBills(userId);
@@ -693,7 +684,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/bills", isAuthenticated, async (req, res) => {
+  router.post("/bills", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertBillSchema.parse(req.body);
@@ -704,7 +695,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.put("/api/bills/:id", isAuthenticated, async (req, res) => {
+  router.put("/bills/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertBillSchema.partial().parse(req.body);
@@ -718,7 +709,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/bills/:id", isAuthenticated, async (req, res) => {
+  router.delete("/bills/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const success = await storage.deleteBill(userId, req.params.id);
@@ -732,7 +723,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Transactions
-  app.get("/api/transactions", isAuthenticated, async (req, res) => {
+  router.get("/transactions", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const date = req.query.date as string;
@@ -744,7 +735,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/transactions", isAuthenticated, async (req, res) => {
+  router.post("/transactions", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertTransactionSchema.parse(req.body);
@@ -755,7 +746,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.put("/api/transactions/:id", isAuthenticated, async (req, res) => {
+  router.put("/transactions/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const validatedData = insertTransactionSchema.partial().parse(req.body);
@@ -769,7 +760,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/transactions/:id", isAuthenticated, async (req, res) => {
+  router.delete("/transactions/:id", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const success = await storage.deleteTransaction(userId, req.params.id);
@@ -783,7 +774,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Transfers
-  app.post("/api/transfers", isAuthenticated, async (req, res) => {
+  router.post("/transfers", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -825,7 +816,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Expense Management
-  app.post("/api/expenses", isAuthenticated, async (req, res) => {
+  router.post("/expenses", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -894,7 +885,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Bill Payment Management
-  app.post("/api/bill-payments", isAuthenticated, async (req, res) => {
+  router.post("/bill-payments", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -964,7 +955,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Credit Card Payment (combines transfer + bill tracking)
-  app.post("/api/credit-card-payments", isAuthenticated, async (req, res) => {
+  router.post("/credit-card-payments", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -1016,7 +1007,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Income Management
-  app.post("/api/income", isAuthenticated, async (req, res) => {
+  router.post("/income", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       
@@ -1068,7 +1059,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Cash Flow Management - Computed from actual transactions
-  app.get("/api/cash-flow/transactions", isAuthenticated, async (req, res) => {
+  router.get("/cash-flow/transactions", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const startDate = req.query.start as string;
@@ -1087,7 +1078,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/cash-flow", isAuthenticated, async (req, res) => {
+  router.get("/cash-flow", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const date = req.query.date as string;
@@ -1104,7 +1095,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/cash-flow/weekly", isAuthenticated, async (req, res) => {
+  router.get("/cash-flow/weekly", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const startDate = req.query.start as string;
@@ -1118,7 +1109,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/cash-flow/monthly", isAuthenticated, async (req, res) => {
+  router.get("/cash-flow/monthly", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const month = req.query.month as string; // YYYY-MM format
@@ -1131,7 +1122,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/cash-flow/yearly", isAuthenticated, async (req, res) => {
+  router.get("/cash-flow/yearly", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const year = req.query.year as string; // YYYY format
@@ -1145,7 +1136,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Import external data (legacy - can be removed)
-  app.post("/api/import-external-data", isAuthenticated, async (req, res) => {
+  router.post("/import-external-data", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const { transactions } = req.body;
@@ -1215,7 +1206,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
 
 
   // Daily Summary
-  app.get("/api/daily-summary", isAuthenticated, async (req, res) => {
+  router.get("/daily-summary", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const date = (req.query.date as string) || new Date().toISOString().split('T')[0];
@@ -1227,7 +1218,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
   });
 
   // Daily Balances
-  app.post("/api/daily-balances/compute", isAuthenticated, async (req, res) => {
+  router.post("/daily-balances/compute", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const date = req.body.date || new Date().toISOString().split('T')[0];
@@ -1238,7 +1229,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/accounts/:id/set-balance", isAuthenticated, async (req, res) => {
+  router.post("/accounts/:id/set-balance", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const accountId = req.params.id;
@@ -1291,7 +1282,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/accounts/bulk-set-balance", isAuthenticated, async (req, res) => {
+  router.post("/accounts/bulk-set-balance", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const schema = z.object({
@@ -1341,7 +1332,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/daily-balances/clear", isAuthenticated, async (req, res) => {
+  router.post("/daily-balances/clear", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const count = await storage.clearAllDailyBalances(userId);
@@ -1361,7 +1352,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     next();
   };
 
-  app.get("/api/sync/accounts", apiKeyAuth, async (req, res) => {
+  router.get("/sync/accounts", apiKeyAuth, async (req, res) => {
     try {
       const email = req.query.email as string;
       if (!email) {
@@ -1386,7 +1377,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/sync/expenses", apiKeyAuth, async (req, res) => {
+  router.post("/sync/expenses", apiKeyAuth, async (req, res) => {
     try {
       const syncSchema = z.object({
         email: z.string().email(),
@@ -1541,7 +1532,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/sync/bill-payments", apiKeyAuth, async (req, res) => {
+  router.post("/sync/bill-payments", apiKeyAuth, async (req, res) => {
     try {
       const syncSchema = z.object({
         email: z.string().email(),
@@ -1690,7 +1681,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/sync/income", apiKeyAuth, async (req, res) => {
+  router.post("/sync/income", apiKeyAuth, async (req, res) => {
     try {
       const syncSchema = z.object({
         email: z.string().email(),
@@ -1791,7 +1782,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.post("/api/accountant-link", isAuthenticated, async (req: any, res) => {
+  router.post("/accountant-link", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { label, filterType, filterYear } = req.body;
@@ -1802,7 +1793,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/accountant-link", isAuthenticated, async (req: any, res) => {
+  router.get("/accountant-link", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const links = await storage.getAccountantLinks(userId);
@@ -1812,7 +1803,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.delete("/api/accountant-link/:token", isAuthenticated, async (req: any, res) => {
+  router.delete("/accountant-link/:token", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const deleted = await storage.deleteAccountantLink(userId, req.params.token);
@@ -1822,7 +1813,7 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
     }
   });
 
-  app.get("/api/public/accountant/:token", async (req, res) => {
+  router.get("/public/accountant/:token", async (req, res) => {
     try {
       const link = await storage.getAccountantLinkByToken(req.params.token);
       if (!link) return res.status(404).json({ message: "Link not found or expired" });
@@ -1834,7 +1825,4 @@ If you cannot determine a field, set it to null. Always return valid JSON.`;
       res.status(500).json({ message: "Failed to load data" });
     }
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }

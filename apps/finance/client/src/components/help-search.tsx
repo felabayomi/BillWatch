@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react"
-import { cn } from "@/lib/utils"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { cn } from "@finance/lib/utils"
+import { Input } from "@finance/components/ui/input"
+import { Button } from "@finance/components/ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@finance/components/ui/popover"
+import { Badge } from "@finance/components/ui/badge"
+import { Separator } from "@finance/components/ui/separator"
 import { Search, ArrowRight, FileText, HelpCircle, ChevronDown } from "lucide-react"
 import { Link, useLocation } from "wouter"
 import Fuse from "fuse.js"
@@ -208,7 +208,7 @@ function HelpSearch({
                 }}
                 data-testid="help-search-clear"
               >
-                ×
+                Ã—
               </Button>
             )}
           </div>
@@ -284,11 +284,11 @@ function HelpSearch({
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">↑↓</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">â†‘â†“</kbd>
                       Navigate
                     </span>
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">↵</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">â†µ</kbd>
                       Select
                     </span>
                     <span className="flex items-center gap-1">

@@ -3,21 +3,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { AccountCombobox } from "@/components/account-combobox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { type AccountWithBalance, type Category, type Business } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
-import { getLocalISODate } from "@/lib/format";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Label } from "@finance/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { AccountCombobox } from "@finance/components/account-combobox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Textarea } from "@finance/components/ui/textarea";
+import { Checkbox } from "@finance/components/ui/checkbox";
+import { useToast } from "@finance/hooks/use-toast";
+import { type AccountWithBalance, type Category, type Business } from "@finance-shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { getLocalISODate } from "@finance/lib/format";
 import { Upload, Loader2, Files } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@finance/components/ui/badge";
 
 const expenseFormSchema = z.object({
   accountId: z.string().optional().default(""),
@@ -85,27 +85,27 @@ export function ExpenseForm({ open, onOpenChange, defaultDate }: ExpenseFormProp
   const isBusinessExpense = form.watch("isBusinessExpense");
 
   const { data: accounts = [] } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
     queryFn: async () => {
-      const response = await fetch("/api/accounts", { credentials: "include" });
+      const response = await fetch("/api/finance/accounts", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       return response.json();
     },
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/finance/categories"],
     queryFn: async () => {
-      const response = await fetch("/api/categories", { credentials: "include" });
+      const response = await fetch("/api/finance/categories", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
     },
   });
 
   const { data: businesses = [] } = useQuery<Business[]>({
-    queryKey: ["/api/businesses"],
+    queryKey: ["/api/finance/businesses"],
     queryFn: async () => {
-      const response = await fetch("/api/businesses", { credentials: "include" });
+      const response = await fetch("/api/finance/businesses", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch businesses');
       return response.json();
     },
@@ -116,7 +116,7 @@ export function ExpenseForm({ open, onOpenChange, defaultDate }: ExpenseFormProp
 
   const createExpenseMutation = useMutation({
     mutationFn: async (data: ExpenseFormData) => {
-      return await apiRequest("POST", "/api/expenses", {
+      return await apiRequest("POST", "/api/finance/expenses", {
         accountId: data.taxOnly && !data.accountId ? null : data.accountId,
         amount: parseFloat(data.amount),
         txDate: data.txDate,
@@ -132,14 +132,14 @@ export function ExpenseForm({ open, onOpenChange, defaultDate }: ExpenseFormProp
       // Get current date for invalidation (handles midnight transitions)
       const currentDate = getLocalISODate();
       // Invalidate all accounts queries (with and without date parameters)
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
       // CRITICAL: Invalidate both transaction date and current date queries
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", variables.txDate] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts", variables.txDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts", currentDate] });
       // Force immediate refetch of current accounts data
-      queryClient.refetchQueries({ queryKey: ["/api/accounts"] });
-      queryClient.refetchQueries({ queryKey: ["/api/accounts", currentDate] });
+      queryClient.refetchQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.refetchQueries({ queryKey: ["/api/finance/accounts", currentDate] });
       toast({
         title: "Expense recorded",
         description: "Your expense has been successfully recorded.",
@@ -167,7 +167,7 @@ export function ExpenseForm({ open, onOpenChange, defaultDate }: ExpenseFormProp
       const formData = new FormData();
       formData.append('receipt', file);
       
-      const response = await fetch('/api/parse-receipt', {
+      const response = await fetch('/api/finance/parse-receipt', {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -228,7 +228,7 @@ export function ExpenseForm({ open, onOpenChange, defaultDate }: ExpenseFormProp
         formData.append('receipts', files[i]);
       }
 
-      const response = await fetch('/api/parse-receipts-batch', {
+      const response = await fetch('/api/finance/parse-receipts-batch', {
         method: 'POST',
         body: formData,
         credentials: 'include',

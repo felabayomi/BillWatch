@@ -1,17 +1,17 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency, getCurrencyColor, getAccountTypeIcon, formatShortDate } from "@/lib/format";
-import { type TransactionWithDetails, type AccountWithBalance, type Category, type Business } from "@shared/schema";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Button } from "@finance/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@finance/components/ui/tabs";
+import { formatCurrency, getCurrencyColor, getAccountTypeIcon, formatShortDate } from "@finance/lib/format";
+import { type TransactionWithDetails, type AccountWithBalance, type Category, type Business } from "@finance-shared/schema";
 import { Printer, FileText, ChevronDown, ChevronRight, User, Search, Pencil, Wallet, PiggyBank, TrendingUp, Landmark, Building2, CreditCard, HandCoins, AlertTriangle } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { EditTransactionForm } from "@/components/edit-transaction-form";
-import { AccountantSharePanel } from "@/components/accountant-share-panel";
+import { Input } from "@finance/components/ui/input";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
+import { EditTransactionForm } from "@finance/components/edit-transaction-form";
+import { AccountantSharePanel } from "@finance/components/accountant-share-panel";
 
 export default function Reports() {
   const today = new Date().toISOString().split('T')[0];
@@ -42,11 +42,11 @@ export default function Reports() {
 
   const togglePersonalMutation = useMutation({
     mutationFn: async ({ id, isPersonal }: { id: string; isPersonal: boolean }) => {
-      const res = await apiRequest("PUT", `/api/transactions/${id}`, { isPersonal });
+      const res = await apiRequest("PUT", `/api/finance/transactions/${id}`, { isPersonal });
       return res.json();
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/transactions"] });
+      qc.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
       toast({ title: "Transaction updated" });
     },
   });
@@ -56,17 +56,17 @@ export default function Reports() {
   };
 
   const { data: transactions = [], isLoading: transactionsLoading } = useQuery<TransactionWithDetails[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/finance/transactions"],
   });
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", today],
+    queryKey: ["/api/finance/accounts", today],
   });
 
   const { data: businesses = [] } = useQuery<Business[]>({
-    queryKey: ["/api/businesses"],
+    queryKey: ["/api/finance/businesses"],
     queryFn: async () => {
-      const response = await fetch("/api/businesses", { credentials: "include" });
+      const response = await fetch("/api/finance/businesses", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch businesses');
       return response.json();
     },
@@ -242,7 +242,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold">Debt to Legacy LLC</h1>
           <p className="text-sm text-gray-600">30 N Gould St Ste R, Sheridan, WY 82801</p>
           <p className="text-sm text-gray-600">info@debttolegacy.com &middot; 240-664-2270</p>
-          <h2 className="text-lg font-semibold mt-2">FinanceWatch — {selectedYear} Tax Report</h2>
+          <h2 className="text-lg font-semibold mt-2">FinanceWatch â€” {selectedYear} Tax Report</h2>
           <p className="text-sm text-gray-600 mt-1">Generated on {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           <p className="text-xs text-gray-500 mt-1">Prepared for tax filing purposes</p>
         </div>
@@ -451,7 +451,7 @@ export default function Reports() {
               <p className="text-sm text-muted-foreground">
                 {selectedBusinessFilter === "all"
                   ? "Business transactions for deduction filing (includes marked business expenses)"
-                  : `Tax report for ${selectedBusinessFilter} — ${selectedYear}`}
+                  : `Tax report for ${selectedBusinessFilter} â€” ${selectedYear}`}
               </p>
             </CardHeader>
             <CardContent>
@@ -593,7 +593,7 @@ export default function Reports() {
                         <div className="flex-1">
                           <div className="font-medium">{t.description || 'No description'}</div>
                           <div className="text-xs text-muted-foreground">
-                            {t.txDate} &middot; {t.categoryName || 'Uncategorized'}{t.accountName ? ` · ${t.accountName}` : ''}{t.taxOnly ? ' · Tax Only' : ''}
+                            {t.txDate} &middot; {t.categoryName || 'Uncategorized'}{t.accountName ? ` Â· ${t.accountName}` : ''}{t.taxOnly ? ' Â· Tax Only' : ''}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -849,7 +849,7 @@ export default function Reports() {
                       onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); setCategorySearch(""); }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      <span className="text-xs">✕</span>
+                      <span className="text-xs">âœ•</span>
                     </button>
                   )}
                   {showCategoryDropdown && (
@@ -1036,7 +1036,7 @@ export default function Reports() {
                               <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                   <CardTitle className="text-base">
-                                    {selectedCategory} — Smart Breakdown
+                                    {selectedCategory} â€” Smart Breakdown
                                   </CardTitle>
                                   <Button variant="ghost" size="sm" onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); }} className="text-xs">
                                     Back to All
@@ -1098,7 +1098,7 @@ export default function Reports() {
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
                                 <CardTitle className="text-base">
-                                  {selectedCategory} — {categorySearch ? `${filteredTxs.length} matches` : `${categoryTxs.length} Transactions`}
+                                  {selectedCategory} â€” {categorySearch ? `${filteredTxs.length} matches` : `${categoryTxs.length} Transactions`}
                                 </CardTitle>
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); setCategorySearch(""); }} className="text-xs">
                                   Back to All

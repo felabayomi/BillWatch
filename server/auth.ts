@@ -7,7 +7,21 @@ import { users } from "../shared/schema.js";
 
 async function hydrateBillWatchUser(req: Request): Promise<any | null> {
   const auth = getAuth(req);
-  if (!auth.isAuthenticated || !auth.userId) return null;
+
+  console.log("[clerk-auth-debug]", {
+    isAuthenticated: auth.isAuthenticated,
+    userId: auth.userId ?? null,
+    sessionId: auth.sessionId ?? null,
+    tokenType: auth.tokenType ?? null,
+    hasAuthorizationHeader: Boolean(req.headers.authorization),
+    origin: req.headers.origin ?? null,
+    host: req.headers.host ?? null,
+  });
+
+  if (!auth.isAuthenticated || !auth.userId) {
+    console.error("[clerk-auth-debug] Clerk did not authenticate request");
+    return null;
+  }
 
   const clerkUser = await clerkClient.users.getUser(auth.userId);
   const primaryEmail = clerkUser.emailAddresses.find(
@@ -66,9 +80,14 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     if (!user) return res.status(401).json({ message: "Unauthorized" });
     return next();
   } catch (error) {
-    console.error("Clerk authentication failed:", error);
-    return res.status(401).json({ message: "Unauthorized" });
-  }
+  console.error("[clerk-auth-error]", {
+    name: error instanceof Error ? error.name : "UnknownError",
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+
+  return res.status(401).json({ message: "Unauthorized" });
+}
 };
 
 export const loadAuthenticatedUser = hydrateBillWatchUser;

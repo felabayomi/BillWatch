@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Badge } from "@finance/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
 import { Shield, RefreshCw, Lock, TrendingUp, Calculator, PieChart, Smartphone, Star, Receipt, Menu, X, Mail, FileCheck, PiggyBank, BarChart3, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
@@ -267,7 +267,7 @@ export default function Landing() {
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Through DTL Navigation Tools, our suite of connected financial applications, clients gain clear 
-                visibility and control over every aspect of their financial lives — from income and spending to 
+                visibility and control over every aspect of their financial lives â€” from income and spending to 
                 debt elimination, saving, investing, and wealth tracking.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -284,11 +284,11 @@ export default function Landing() {
                 step by step from income to wealth:
               </p>
               <p className="text-lg font-semibold text-foreground leading-relaxed text-center">
-                Income → Spend → Track → Eliminate Debt → Save → Invest → Build Wealth → Create Legacy
+                Income â†’ Spend â†’ Track â†’ Eliminate Debt â†’ Save â†’ Invest â†’ Build Wealth â†’ Create Legacy
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 We don't believe in quick fixes or fragmented advice. We believe in systems, clarity, and 
-                consistency — one system, guiding every money decision, for a lifetime.
+                consistency â€” one system, guiding every money decision, for a lifetime.
               </p>
             </div>
           </div>
@@ -346,7 +346,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-incomelift"
                 >
-                  Visit IncomeLift →
+                  Visit IncomeLift â†’
                 </a>
               </CardContent>
             </Card>
@@ -365,7 +365,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-steadyvest"
                 >
-                  Visit SteadyVest →
+                  Visit SteadyVest â†’
                 </a>
               </CardContent>
             </Card>
@@ -384,7 +384,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-billwatch"
                 >
-                  Visit BillWatch →
+                  Visit BillWatch â†’
                 </a>
               </CardContent>
             </Card>
@@ -403,7 +403,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-diydebt"
                 >
-                  Visit DIY Debt →
+                  Visit DIY Debt â†’
                 </a>
               </CardContent>
             </Card>
@@ -422,7 +422,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-felixpay"
                 >
-                  Visit Felix Pay →
+                  Visit Felix Pay â†’
                 </a>
               </CardContent>
             </Card>
@@ -441,7 +441,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-expensewatch"
                 >
-                  Visit ExpenseWatch →
+                  Visit ExpenseWatch â†’
                 </a>
               </CardContent>
             </Card>
@@ -454,7 +454,7 @@ export default function Landing() {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">Complete financial overview</p>
-                <span className="text-primary font-medium">You're here! →</span>
+                <span className="text-primary font-medium">You're here! â†’</span>
               </CardContent>
             </Card>
 
@@ -472,7 +472,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-felixcheckbook"
                 >
-                  Visit Felix CheckBook →
+                  Visit Felix CheckBook â†’
                 </a>
               </CardContent>
             </Card>
@@ -491,7 +491,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-savingspro"
                 >
-                  Visit SavingsPro →
+                  Visit SavingsPro â†’
                 </a>
               </CardContent>
             </Card>
@@ -510,7 +510,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-wealthwatch"
                 >
-                  Visit WealthWatch →
+                  Visit WealthWatch â†’
                 </a>
               </CardContent>
             </Card>
@@ -569,7 +569,7 @@ export default function Landing() {
               </a>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2026 Debt to Legacy LLC. All rights reserved.
+              Â© 2026 Debt to Legacy LLC. All rights reserved.
             </p>
           </div>
         </div>

@@ -30,7 +30,7 @@ import {
   users,
   accountantLinks,
   inferCategory
-} from "@shared/schema";
+} from "../shared/schema";
 
 export class DatabaseStorage implements IStorage {
   // Users

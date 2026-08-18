@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
 import { ArrowLeft, Receipt, Database, Cloud, Brain, RefreshCw, Link2, ShieldCheck, Server, Eye, Lock } from "lucide-react";
 import { Link } from "wouter";
 
@@ -70,7 +70,7 @@ export default function DataUsage() {
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>Important:</strong> All monetary values are stored as whole cents (integers) — never floating-point numbers — to ensure mathematical precision in your balance calculations.
+                    <strong>Important:</strong> All monetary values are stored as whole cents (integers) â€” never floating-point numbers â€” to ensure mathematical precision in your balance calculations.
                   </p>
                 </div>
               </CardContent>
@@ -85,12 +85,12 @@ export default function DataUsage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-600 dark:text-gray-300">
-                  When you upload a receipt or invoice image (manually or via batch upload), the file is stored in <strong>Replit Object Storage</strong> — a secure cloud storage system tied to your account.
+                  When you upload a receipt or invoice image (manually or via batch upload), the file is stored in <strong>Replit Object Storage</strong> â€” a secure cloud storage system tied to your account.
                 </p>
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2">
                   <li>Files are stored privately and only accessible to your account</li>
                   <li>Receipt images are linked to specific transactions by a file path stored in the database</li>
-                  <li>Accountant share links may expose receipt URLs if the transaction is within the shared scope — the accountant can view but not download or modify</li>
+                  <li>Accountant share links may expose receipt URLs if the transaction is within the shared scope â€” the accountant can view but not download or modify</li>
                   <li>You can delete any receipt by editing the associated transaction</li>
                 </ul>
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
@@ -148,7 +148,7 @@ export default function DataUsage() {
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2">
                   <li>The external app sends transaction details (amount, date, description, account name, category, and optionally a receipt) via a secure API call using your membership credentials</li>
                   <li>FinanceWatch matches the account by name and creates the transaction</li>
-                  <li>If the account is linked to a specific business, that business is automatically assigned — you don't have to do it manually</li>
+                  <li>If the account is linked to a specific business, that business is automatically assigned â€” you don't have to do it manually</li>
                   <li>Duplicate detection prevents the same transaction from being imported twice</li>
                   <li>Receipt images sent during sync are stored in the same secure object storage as manually uploaded receipts</li>
                 </ul>
@@ -170,11 +170,11 @@ export default function DataUsage() {
                   When you generate an accountant share link, a time-limited, token-based URL is created. Here's what that means for your data:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2">
-                  <li>The link is scoped to the year and transaction type you chose at generation time — the accountant cannot expand beyond that scope</li>
+                  <li>The link is scoped to the year and transaction type you chose at generation time â€” the accountant cannot expand beyond that scope</li>
                   <li>Data visible through the link: transactions (including description, amount, date, category, account name, business flag), category spending totals, account names, and receipt links where applicable</li>
-                  <li>The link is read-only — the accountant cannot edit, delete, or add anything</li>
+                  <li>The link is read-only â€” the accountant cannot edit, delete, or add anything</li>
                   <li>No login is required to view the link, so anyone with the URL can see the scoped data</li>
-                  <li>You can revoke any link at any time from the Reports page — it becomes inaccessible immediately</li>
+                  <li>You can revoke any link at any time from the Reports page â€” it becomes inaccessible immediately</li>
                   <li>Share links do not expose your account balances, opening balances, personal ID, or anything outside the chosen year/type</li>
                 </ul>
                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -197,8 +197,8 @@ export default function DataUsage() {
                   FinanceWatch uses <strong>Felix Pay Single Sign-On (SSO)</strong> via Replit Auth for authentication. When you log in:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-2">
-                  <li>Your identity (user ID, email) is provided by the SSO provider — we do not store passwords</li>
-                  <li>Your user ID is used to scope all data in the database — no one else can access your data</li>
+                  <li>Your identity (user ID, email) is provided by the SSO provider â€” we do not store passwords</li>
+                  <li>Your user ID is used to scope all data in the database â€” no one else can access your data</li>
                   <li>Sessions are managed securely using server-side session cookies</li>
                   <li>Your membership tier is verified with Felix Pay on each login</li>
                 </ul>

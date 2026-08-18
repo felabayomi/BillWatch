@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
 import { ArrowLeft, Receipt, FileText, Scale, AlertTriangle, UserCheck, RefreshCw } from "lucide-react";
 import { Link } from "wouter";
 
@@ -75,7 +75,7 @@ export default function TermsOfUse() {
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Data Accuracy</h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    You are solely responsible for the accuracy of financial data you enter. FinanceWatch provides calculation and tracking tools — you remain responsible for verifying figures against your actual bank and financial institution records.
+                    You are solely responsible for the accuracy of financial data you enter. FinanceWatch provides calculation and tracking tools â€” you remain responsible for verifying figures against your actual bank and financial institution records.
                   </p>
                 </div>
                 <div>

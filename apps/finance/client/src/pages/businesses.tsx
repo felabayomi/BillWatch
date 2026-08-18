@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { type Business } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Input } from "@finance/components/ui/input";
+import { useToast } from "@finance/hooks/use-toast";
+import { apiRequest, queryClient } from "@finance/lib/queryClient";
+import { type Business } from "@finance-shared/schema";
 import { Building2, Trash2, Plus } from "lucide-react";
 
 export default function Businesses() {
@@ -13,15 +13,15 @@ export default function Businesses() {
   const { toast } = useToast();
 
   const { data: businesses = [], isLoading } = useQuery<Business[]>({
-    queryKey: ["/api/businesses"],
+    queryKey: ["/api/finance/businesses"],
   });
 
   const createMutation = useMutation({
     mutationFn: async (name: string) => {
-      return await apiRequest("POST", "/api/businesses", { name });
+      return await apiRequest("POST", "/api/finance/businesses", { name });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/businesses"] });
       setNewName("");
       toast({ title: "Success", description: "Business created successfully" });
     },
@@ -32,10 +32,10 @@ export default function Businesses() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/businesses/${id}`);
+      return await apiRequest("DELETE", `/api/finance/businesses/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/businesses"] });
       toast({ title: "Success", description: "Business deleted successfully" });
     },
     onError: () => {

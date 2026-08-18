@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'wouter'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@finance/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card"
 import { ArrowLeft, BookOpen, HelpCircle, AlertTriangle } from "lucide-react"
-import { loadMDXContent, contentRegistry } from '@/lib/content-loader'
-import { formatCategoryName } from '@/lib/mdx-utils'
-import { RuntimeMDXRenderer } from '@/components/runtime-mdx-renderer'
-import { MDXProviderWrapper } from '@/components/mdx-components'
-import type { MDXContent } from '@/lib/mdx-utils'
+import { loadMDXContent, contentRegistry } from '@finance/lib/content-loader'
+import { formatCategoryName } from '@finance/lib/mdx-utils'
+import { RuntimeMDXRenderer } from '@finance/components/runtime-mdx-renderer'
+import { MDXProviderWrapper } from '@finance/components/mdx-components'
+import type { MDXContent } from '@finance/lib/mdx-utils'
 
 export default function HelpContent() {
   const params = useParams()

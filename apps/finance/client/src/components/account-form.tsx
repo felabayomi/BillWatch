@@ -2,16 +2,16 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { insertAccountSchema, type AccountCategory, inferCategory } from "@shared/schema";
-import type { Business } from "@shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
+import { insertAccountSchema, type AccountCategory, inferCategory } from "@finance-shared/schema";
+import type { Business } from "@finance-shared/schema";
 
 const formSchema = insertAccountSchema.extend({
   openingBalance: z.string().min(1, "Opening balance is required"),
@@ -35,7 +35,7 @@ export function AccountForm({ open, onOpenChange }: AccountFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: businesses = [] } = useQuery<Business[]>({ queryKey: ["/api/businesses"] });
+  const { data: businesses = [] } = useQuery<Business[]>({ queryKey: ["/api/finance/businesses"] });
 
   const getMountainTimeDate = () => {
     const now = new Date();
@@ -92,11 +92,11 @@ export function AccountForm({ open, onOpenChange }: AccountFormProps) {
         businessId: data.owner === 'business' && businessId ? businessId : null,
         businessName: data.owner === 'business' && selectedBiz ? selectedBiz.name : null,
       };
-      const response = await apiRequest("POST", "/api/accounts", accountData);
+      const response = await apiRequest("POST", "/api/finance/accounts", accountData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
       toast({ title: "Success", description: "Account created successfully" });
       onOpenChange(false);
       form.reset();
@@ -242,11 +242,11 @@ export function AccountForm({ open, onOpenChange }: AccountFormProps) {
                       <SelectTrigger data-testid="select-category"><SelectValue placeholder="Select category" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="PERSONAL">🏠 Personal</SelectItem>
-                      <SelectItem value="SAVINGS">💰 Savings</SelectItem>
-                      <SelectItem value="CREDIT">💳 Credit</SelectItem>
-                      <SelectItem value="BUSINESS">🏢 Business</SelectItem>
-                      <SelectItem value="INVESTMENT">📈 Investment</SelectItem>
+                      <SelectItem value="PERSONAL">ðŸ  Personal</SelectItem>
+                      <SelectItem value="SAVINGS">ðŸ’° Savings</SelectItem>
+                      <SelectItem value="CREDIT">ðŸ’³ Credit</SelectItem>
+                      <SelectItem value="BUSINESS">ðŸ¢ Business</SelectItem>
+                      <SelectItem value="INVESTMENT">ðŸ“ˆ Investment</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

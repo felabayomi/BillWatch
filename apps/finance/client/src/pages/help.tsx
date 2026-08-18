@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Badge } from "@finance/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@finance/components/ui/tabs";
 import { ArrowLeft, Receipt, BookOpen, Plus, Calculator, PieChart, CreditCard, TrendingUp, CheckCircle, ArrowRight, HelpCircle, Shield, Database, Smartphone, Mail, AlertTriangle, Bug, Settings, RefreshCw } from "lucide-react";
 import { Link, useLocation, useParams } from "wouter";
 import { useEffect, useState } from "react";
@@ -201,7 +201,7 @@ export default function Help() {
                       The system automatically calculates your daily balances using this formula:
                     </p>
                     <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg font-mono text-sm">
-                      Opening Balance + Inflows - Outflows ± Adjustments = Closing Balance
+                      Opening Balance + Inflows - Outflows Â± Adjustments = Closing Balance
                     </div>
                     <p className="text-gray-600 dark:text-gray-300 mt-4">
                       Each day's opening balance equals the previous day's closing balance, ensuring mathematical continuity.
@@ -396,7 +396,7 @@ export default function Help() {
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">How does daily balance reconciliation work?</h4>
                     <p className="text-gray-600 dark:text-gray-300">
                       Each day, the system calculates your account balances using the formula: Opening Balance + 
-                      Inflows - Outflows ± Adjustments = Closing Balance. This ensures mathematical accuracy and 
+                      Inflows - Outflows Â± Adjustments = Closing Balance. This ensures mathematical accuracy and 
                       helps you catch discrepancies early.
                     </p>
                   </div>

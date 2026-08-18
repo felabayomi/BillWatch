@@ -1,6 +1,6 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@finance/components/ui/accordion"
+import { Badge } from "@finance/components/ui/badge"
+import { cn } from "@finance/lib/utils"
 import { HelpCircle, AlertTriangle, CheckCircle, Info } from "lucide-react"
 
 export interface FAQItem {

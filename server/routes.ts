@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { createFinanceRouter } from "./financeRoutes.js";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, loadAuthenticatedUser } from "./auth.js";
 import { emailService } from "./emailService.js";
@@ -44,6 +45,10 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  const financeRouter = await createFinanceRouter();
+
+  app.use("/api/finance", financeRouter);
 
   // Health check endpoint for production monitoring
   app.get('/api/health', (req, res) => {

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { useToast } from "@finance/hooks/use-toast";
+import { apiRequest } from "@finance/lib/queryClient";
 import { Link2, Trash2, Copy, Check, Users, Shield, Eye, Building2, User, Calendar, Filter } from "lucide-react";
-import { type AccountantLink } from "@shared/schema";
+import { type AccountantLink } from "@finance-shared/schema";
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = ["all", ...Array.from({ length: 6 }, (_, i) => String(CURRENT_YEAR - i))];
@@ -21,22 +21,22 @@ export function AccountantSharePanel() {
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
   const { data: links = [], isLoading } = useQuery<AccountantLink[]>({
-    queryKey: ["/api/accountant-link"],
+    queryKey: ["/api/finance/accountant-link"],
   });
 
   const createMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/accountant-link", { label, filterType, filterYear }),
+    mutationFn: () => apiRequest("POST", "/api/finance/accountant-link", { label, filterType, filterYear }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/accountant-link"] });
+      qc.invalidateQueries({ queryKey: ["/api/finance/accountant-link"] });
       toast({ title: "Link created", description: "Share this link with your accountant or tax preparer." });
     },
     onError: () => toast({ title: "Error", description: "Could not create link.", variant: "destructive" }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (token: string) => apiRequest("DELETE", `/api/accountant-link/${token}`),
+    mutationFn: (token: string) => apiRequest("DELETE", `/api/finance/accountant-link/${token}`),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["/api/accountant-link"] });
+      qc.invalidateQueries({ queryKey: ["/api/finance/accountant-link"] });
       toast({ title: "Link revoked", description: "The link is no longer accessible." });
     },
     onError: () => toast({ title: "Error", description: "Could not revoke link.", variant: "destructive" }),
@@ -69,7 +69,7 @@ export function AccountantSharePanel() {
               <Eye className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
               <div>
                 <p className="font-semibold text-green-800">Read Only</p>
-                <p className="text-green-700 text-xs mt-0.5">They can view transactions and open receipts — but cannot edit, delete, or change anything.</p>
+                <p className="text-green-700 text-xs mt-0.5">They can view transactions and open receipts â€” but cannot edit, delete, or change anything.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -100,7 +100,7 @@ export function AccountantSharePanel() {
                 <Input
                   value={label}
                   onChange={e => setLabel(e.target.value)}
-                  placeholder="e.g. My CPA – 2025 Taxes"
+                  placeholder="e.g. My CPA â€“ 2025 Taxes"
                 />
               </div>
               <div>

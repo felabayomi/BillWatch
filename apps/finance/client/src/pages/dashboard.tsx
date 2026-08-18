@@ -1,20 +1,20 @@
 import { useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { AccountForm } from "@/components/account-form";
-import { TransferForm } from "@/components/transfer-form";
-import { CreditCardPaymentForm } from "@/components/credit-card-payment-form";
-import { formatCurrency, formatShortDate, getCurrencyColor, getAccountTypeIcon, getCategoryColor, getLocalISODate } from "@/lib/format";
-import { type AccountWithBalance, inferCategory } from "@shared/schema"; 
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Input } from "@finance/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@finance/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@finance/components/ui/popover";
+import { Calendar } from "@finance/components/ui/calendar";
+import { AccountForm } from "@finance/components/account-form";
+import { TransferForm } from "@finance/components/transfer-form";
+import { CreditCardPaymentForm } from "@finance/components/credit-card-payment-form";
+import { formatCurrency, formatShortDate, getCurrencyColor, getAccountTypeIcon, getCategoryColor, getLocalISODate } from "@finance/lib/format";
+import { type AccountWithBalance, inferCategory } from "@finance-shared/schema"; 
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
 import { Link } from "wouter";
-import { Label } from "@/components/ui/label";
+import { Label } from "@finance/components/ui/label";
 import { Plus, ArrowLeftRight, Search, ChevronDown, ChevronUp, CalendarIcon, ChevronLeft, ChevronRight, CreditCard, Edit3, RefreshCw, TrendingUp, TrendingDown, Wallet, Building2, PiggyBank, Landmark, BarChart3 } from "lucide-react";
 import { format, subDays, addDays, isToday, startOfDay } from "date-fns";
 
@@ -39,14 +39,17 @@ export default function Dashboard() {
   const assetTypes = ['checking', 'savings', 'cash', 'investment', 'rewards'];
 
   const { data: accounts = [], isLoading: accountsLoading, error: accountsError } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", selectedDateString],
+    queryKey: ["/api/finance/accounts", selectedDateString],
     queryFn: async () => {
-      const response = await fetch(`/api/accounts?date=${selectedDateString}`, {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-        }
-      });
+      const response = await fetch(
+        `/api/finance/accounts?date=${selectedDateString}`,
+        {
+          credentials: "include",
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -81,8 +84,8 @@ export default function Dashboard() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/accounts", selectedDateString] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/finance/accounts", selectedDateString] });
       toast({ title: "Refreshed", description: "Dashboard data updated with latest transactions." });
     } catch (error) {
       toast({ title: "Error", description: "Failed to refresh data.", variant: "destructive" });
@@ -101,12 +104,12 @@ export default function Dashboard() {
         return;
       }
       const correctBalanceCents = Math.round(dollars * 100);
-      await apiRequest("POST", `/api/accounts/${balanceCorrectionAccount.id}/set-balance`, {
+      await apiRequest("POST", `/api/finance/accounts/${balanceCorrectionAccount.id}/set-balance`, {
         correctBalanceCents,
         date: selectedDateString,
       });
-      await queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/accounts"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/finance/accounts"] });
       toast({ title: "Balance corrected", description: `${balanceCorrectionAccount.name} balance set to $${dollars.toFixed(2)}` });
       setBalanceCorrectionAccount(null);
       setBalanceCorrectionValue("");
@@ -451,7 +454,7 @@ export default function Dashboard() {
                                 <div className="min-w-0">
                                   <Link to={`/accounts/${account.id}/ledger`} className="font-medium text-sm text-foreground hover:text-primary transition-colors truncate block">{account.name}</Link>
                                   <div className="text-xs text-muted-foreground truncate">
-                                    {account.institution || account.owner} • {account.type}
+                                    {account.institution || account.owner} â€¢ {account.type}
                                     {account.type === 'savings' && (account as any).apyPercent && (
                                       <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                                         {(account as any).apyPercent}% APY

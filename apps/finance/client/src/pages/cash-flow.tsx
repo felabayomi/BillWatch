@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { formatCurrency } from "@/lib/format";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Input } from "@finance/components/ui/input";
+import { formatCurrency } from "@finance/lib/format";
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@finance/components/ui/button";
+import { useToast } from "@finance/hooks/use-toast";
 
 interface DailyCashFlow {
   date: string;
@@ -44,9 +44,9 @@ function formatWeekRange(start: Date, end: Date) {
 
 function TransactionList({ startDate, endDate, type, label }: { startDate: string; endDate: string; type: string; label: string }) {
   const { data: transactions = [], isLoading } = useQuery<CashFlowTransaction[]>({
-    queryKey: ['/api/cash-flow/transactions', startDate, endDate, type],
+    queryKey: ['/api/finance/cash-flow/transactions', startDate, endDate, type],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-flow/transactions?start=${startDate}&end=${endDate}&type=${type}`, {
+      const response = await fetch(`/api/finance/cash-flow/transactions?start=${startDate}&end=${endDate}&type=${type}`, {
         credentials: 'include',
       });
       if (!response.ok) return [];
@@ -69,8 +69,8 @@ function TransactionList({ startDate, endDate, type, label }: { startDate: strin
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{tx.description || 'No description'}</p>
             <p className="text-muted-foreground truncate">
-              {tx.accountName}{tx.categoryName ? ` · ${tx.categoryName}` : ''}
-              {startDate !== endDate && ` · ${tx.txDate}`}
+              {tx.accountName}{tx.categoryName ? ` Â· ${tx.categoryName}` : ''}
+              {startDate !== endDate && ` Â· ${tx.txDate}`}
             </p>
           </div>
           <span className={`flex-shrink-0 font-mono ${tx.amountCents >= 0 ? 'text-secondary' : 'text-destructive'}`}>
@@ -136,9 +136,9 @@ export default function CashFlow() {
   const weekEndStr = weekEnd.toLocaleDateString('en-CA');
 
   const { data: dailyData } = useQuery({
-    queryKey: ['/api/cash-flow', selectedDate],
+    queryKey: ['/api/finance/cash-flow', selectedDate],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-flow?date=${selectedDate}`, {
+      const response = await fetch(`/api/finance/cash-flow?date=${selectedDate}`, {
         credentials: 'include',
       });
       if (!response.ok) {
@@ -152,9 +152,9 @@ export default function CashFlow() {
   });
 
   const { data: weeklyData = [] } = useQuery<DailyCashFlow[]>({
-    queryKey: ['/api/cash-flow/weekly', weekStartStr, weekEndStr],
+    queryKey: ['/api/finance/cash-flow/weekly', weekStartStr, weekEndStr],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-flow/weekly?start=${weekStartStr}&end=${weekEndStr}`, {
+      const response = await fetch(`/api/finance/cash-flow/weekly?start=${weekStartStr}&end=${weekEndStr}`, {
         credentials: 'include',
       });
       if (!response.ok) return [];
@@ -163,9 +163,9 @@ export default function CashFlow() {
   });
 
   const { data: monthlyData = [] } = useQuery<DailyCashFlow[]>({
-    queryKey: ['/api/cash-flow/monthly', selectedMonth],
+    queryKey: ['/api/finance/cash-flow/monthly', selectedMonth],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-flow/monthly?month=${selectedMonth}`, {
+      const response = await fetch(`/api/finance/cash-flow/monthly?month=${selectedMonth}`, {
         credentials: 'include',
       });
       if (!response.ok) return [];
@@ -174,9 +174,9 @@ export default function CashFlow() {
   });
 
   const { data: yearlyData = [] } = useQuery<DailyCashFlow[]>({
-    queryKey: ['/api/cash-flow/yearly', selectedYear],
+    queryKey: ['/api/finance/cash-flow/yearly', selectedYear],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-flow/yearly?year=${selectedYear}`, {
+      const response = await fetch(`/api/finance/cash-flow/yearly?year=${selectedYear}`, {
         credentials: 'include',
       });
       if (!response.ok) return [];
@@ -256,7 +256,7 @@ export default function CashFlow() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await queryClient.invalidateQueries({ queryKey: ['/api/cash-flow'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/finance/cash-flow'] });
       toast({ title: "Refreshed", description: "Cash flow data updated with latest transactions." });
     } catch (error) {
       toast({ title: "Error", description: "Failed to refresh data.", variant: "destructive" });

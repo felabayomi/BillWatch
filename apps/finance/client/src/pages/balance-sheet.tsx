@@ -1,16 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, getCurrencyColor } from "@/lib/format";
-import { type AccountWithBalance } from "@shared/schema";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { formatCurrency, getCurrencyColor } from "@finance/lib/format";
+import { type AccountWithBalance } from "@finance-shared/schema";
 import { Wallet, PiggyBank, TrendingUp, CreditCard, Building2, HandCoins, AlertTriangle } from "lucide-react";
 
 export default function BalanceSheet() {
   const today = new Date().toISOString().split('T')[0];
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", today],
+    queryKey: ["/api/finance/accounts", today],
     queryFn: async () => {
-      const response = await fetch(`/api/accounts?date=${today}`, {
+      const response = await fetch(`/api/finance/accounts?date=${today}`, {
         credentials: "include",
       });
       if (!response.ok) {

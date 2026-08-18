@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AccountForm } from "@/components/account-form";
-import { EditAccountModal } from "@/components/edit-account-modal";
-import { formatCurrency, getCurrencyColor, getAccountTypeIcon, getLocalISODate } from "@/lib/format";
-import { useToast } from "@/hooks/use-toast";
-import { type AccountWithBalance, type AccountCategory, type Account, inferCategory } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@finance/components/ui/alert-dialog";
+import { Badge } from "@finance/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from "@finance/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { AccountForm } from "@finance/components/account-form";
+import { EditAccountModal } from "@finance/components/edit-account-modal";
+import { formatCurrency, getCurrencyColor, getAccountTypeIcon, getLocalISODate } from "@finance/lib/format";
+import { useToast } from "@finance/hooks/use-toast";
+import { type AccountWithBalance, type AccountCategory, type Account, inferCategory } from "@finance-shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
 import { MoreVertical, Plus, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@finance/components/ui/input";
 import { Link } from "wouter";
 import Tesseract from "tesseract.js";
 
@@ -42,9 +42,9 @@ export default function Accounts() {
   const { toast } = useToast();
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
     queryFn: async () => {
-      const response = await fetch("/api/accounts", {
+      const response = await fetch("/api/finance/accounts", {
         credentials: "include", // Include session cookies
       });
       if (!response.ok) {
@@ -59,7 +59,7 @@ export default function Accounts() {
     const triggerMigration = async () => {
       try {
         console.log('Triggering migration...');
-        const response = await fetch('/api/accounts/migrate-categories', {
+        const response = await fetch('/api/finance/accounts/migrate-categories', {
           method: 'POST',
           credentials: 'include'
         });
@@ -67,7 +67,7 @@ export default function Accounts() {
         console.log('Migration result:', result);
         if (result.updated > 0) {
           // Refresh accounts data
-          queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
         }
       } catch (error) {
         console.error('Migration failed:', error);
@@ -169,7 +169,7 @@ export default function Accounts() {
       accountName: /(?:360\s*)?(?:checking|savings|performance\s*savings|quicksilver|platinum\s*secured|cash\s*rewards|venture|savor|money\s*market|cd|certificate)/i,
       
       // Balance patterns ($123.45, 123.45, -123.45)
-      balance: /[−-]?\$?(\d{1,3}(?:,?\d{3})*\.?\d{0,2})/,
+      balance: /[âˆ’-]?\$?(\d{1,3}(?:,?\d{3})*\.?\d{0,2})/,
       
       // Last 4 digits patterns (...1234, ****1234, ending in 1234)
       last4: /(?:\.{3,4}|ending\s+in\s*|\*{4})(\d{4})/i,
@@ -215,7 +215,7 @@ export default function Accounts() {
         const balanceStr = balanceMatch[1].replace(/,/g, '');
         const balance = parseFloat(balanceStr);
         if (!isNaN(balance)) {
-          currentAccount.openingBalance = line.includes('-') || line.includes('−') ? -balance : balance;
+          currentAccount.openingBalance = line.includes('-') || line.includes('âˆ’') ? -balance : balance;
         }
       }
       
@@ -294,7 +294,7 @@ export default function Accounts() {
     try {
       console.log('Creating accounts from scan:', parsedAccounts);
       
-      const response = await apiRequest('POST', '/api/accounts/bulk', { accounts: parsedAccounts });
+      const response = await apiRequest('POST', '/api/finance/accounts/bulk', { accounts: parsedAccounts });
       const result = await response.json();
 
       if (result.errors && result.errors.length > 0) {
@@ -311,7 +311,7 @@ export default function Accounts() {
       }
       
       // Refresh accounts data
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
       
       // Close scanner
       resetScanner();
@@ -445,7 +445,7 @@ export default function Accounts() {
 
   const moveToCategoryMutation = useMutation({
     mutationFn: async ({ accountId, newCategory }: { accountId: string; newCategory: AccountCategory }) => {
-      const response = await apiRequest("PATCH", `/api/accounts/${accountId}`, { category: newCategory });
+      const response = await apiRequest("PATCH", `/api/finance/accounts/${accountId}`, { category: newCategory });
       if (!response.ok) {
         throw new Error('Failed to update account category');
       }
@@ -454,10 +454,10 @@ export default function Accounts() {
     
     onMutate: async ({ accountId, newCategory }) => {
       // Cancel any outgoing refetches so they don't overwrite our optimistic update
-      await queryClient.cancelQueries({ queryKey: ["/api/accounts"] });
+      await queryClient.cancelQueries({ queryKey: ["/api/finance/accounts"] });
       
       // Snapshot the previous value for rollback
-      const previousAccounts = queryClient.getQueryData<AccountWithBalance[]>(["/api/accounts"]);
+      const previousAccounts = queryClient.getQueryData<AccountWithBalance[]>(["/api/finance/accounts"]);
       
       // Optimistically update the account's category
       if (previousAccounts) {
@@ -466,7 +466,7 @@ export default function Accounts() {
             ? { ...account, category: newCategory } as AccountWithBalance & { category: AccountCategory }
             : account
         );
-        queryClient.setQueryData(["/api/accounts"], updatedAccounts);
+        queryClient.setQueryData(["/api/finance/accounts"], updatedAccounts);
       }
       
       // Return a context object with the snapshotted value
@@ -478,7 +478,7 @@ export default function Accounts() {
       
       // Roll back to the previous value
       if (context?.previousAccounts) {
-        queryClient.setQueryData(["/api/accounts"], context.previousAccounts);
+        queryClient.setQueryData(["/api/finance/accounts"], context.previousAccounts);
       }
       
       toast({
@@ -497,13 +497,13 @@ export default function Accounts() {
     
     onSettled: () => {
       // Always refetch after error or success to ensure consistency
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
     },
   });
 
   const handleMoveToCategory = (accountId: string, newCategory: AccountCategory) => {
     // Get the current account to check if it's already in the target category
-    const currentAccounts = queryClient.getQueryData<AccountWithBalance[]>(["/api/accounts"]);
+    const currentAccounts = queryClient.getQueryData<AccountWithBalance[]>(["/api/finance/accounts"]);
     const currentAccount = currentAccounts?.find(acc => acc.id === accountId);
     
     if (!currentAccount) {
@@ -523,7 +523,10 @@ export default function Accounts() {
 
   const deleteAccountMutation = useMutation({
     mutationFn: async (accountId: string) => {
-      const response = await apiRequest("DELETE", `/api/accounts/${accountId}`);
+const response = await apiRequest(
+  "DELETE",
+  `/api/finance/accounts/${accountId}`,
+);
       if (!response.ok) {
         throw new Error('Failed to delete account');
       }
@@ -534,7 +537,7 @@ export default function Accounts() {
         title: "Success",
         description: "Account deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
       setShowDeleteConfirm(false);
       setAccountToDelete(null);
     },
@@ -650,7 +653,7 @@ export default function Accounts() {
                 <div>
                   <div className="font-medium text-foreground">{account.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {account.institution} • {account.type}
+                    {account.institution} â€¢ {account.type}
                     {account.type === 'savings' && (account as any).apyPercent && (
                       <span className="ml-2 text-green-700 dark:text-green-400 font-medium">
                         {(account as any).apyPercent}% APY
@@ -702,11 +705,11 @@ export default function Accounts() {
                       onClick={() => handleEditAccount(account)}
                       data-testid={`menu-edit-account-${account.id}`}
                     >
-                      ✏️ Edit Details
+                      âœï¸ Edit Details
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger data-testid={`menu-move-category-${account.id}`}>
-                        📁 Move to...
+                        ðŸ“ Move to...
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
                         <DropdownMenuItem
@@ -714,9 +717,9 @@ export default function Accounts() {
                           disabled={getAccountCategory(account) === 'PERSONAL' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-personal-${account.id}`}
                         >
-                          🏠 Personal
+                          ðŸ  Personal
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'PERSONAL' && (
-                            <span className="ml-auto text-xs">⏳</span>
+                            <span className="ml-auto text-xs">â³</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -724,9 +727,9 @@ export default function Accounts() {
                           disabled={getAccountCategory(account) === 'CREDIT' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-credit-${account.id}`}
                         >
-                          💳 Credit
+                          ðŸ’³ Credit
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'CREDIT' && (
-                            <span className="ml-auto text-xs">⏳</span>
+                            <span className="ml-auto text-xs">â³</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -734,9 +737,9 @@ export default function Accounts() {
                           disabled={getAccountCategory(account) === 'BUSINESS' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-business-${account.id}`}
                         >
-                          🏢 Business
+                          ðŸ¢ Business
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'BUSINESS' && (
-                            <span className="ml-auto text-xs">⏳</span>
+                            <span className="ml-auto text-xs">â³</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -744,9 +747,9 @@ export default function Accounts() {
                           disabled={getAccountCategory(account) === 'INVESTMENT' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-investment-${account.id}`}
                         >
-                          📈 Investment
+                          ðŸ“ˆ Investment
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'INVESTMENT' && (
-                            <span className="ml-auto text-xs">⏳</span>
+                            <span className="ml-auto text-xs">â³</span>
                           )}
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
@@ -756,7 +759,7 @@ export default function Accounts() {
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                       data-testid={`menu-delete-account-${account.id}`}
                     >
-                      🗑️ Delete Account
+                      ðŸ—‘ï¸ Delete Account
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -784,10 +787,10 @@ export default function Accounts() {
             className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
             data-testid="button-scan-document"
           >
-            📄 Scan Document
+            ðŸ“„ Scan Document
           </Button>
           <Button onClick={() => setShowAccountForm(true)} data-testid="button-add-account">
-            ➕ Add Account
+            âž• Add Account
           </Button>
         </div>
       </div>
@@ -810,18 +813,18 @@ export default function Accounts() {
 
       {/* Category Sections - Only show sections with accounts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {renderAccountSection("💼 Personal Accounts", personalAccounts, "personal", "No personal accounts found.")}
-        {renderAccountSection("💰 Savings Accounts", savingsAccounts, "savings", "No savings accounts found.")}
-        {renderAccountSection("💳 Credit Accounts", creditAccounts, "credit", "No credit accounts found.")}
-        {renderAccountSection("🏢 Business Accounts", businessAccounts, "business", "No business accounts found.")}
-        {renderAccountSection("📈 Investment Accounts", investmentAccounts, "investment", "No investment accounts found.")}
+        {renderAccountSection("ðŸ’¼ Personal Accounts", personalAccounts, "personal", "No personal accounts found.")}
+        {renderAccountSection("ðŸ’° Savings Accounts", savingsAccounts, "savings", "No savings accounts found.")}
+        {renderAccountSection("ðŸ’³ Credit Accounts", creditAccounts, "credit", "No credit accounts found.")}
+        {renderAccountSection("ðŸ¢ Business Accounts", businessAccounts, "business", "No business accounts found.")}
+        {renderAccountSection("ðŸ“ˆ Investment Accounts", investmentAccounts, "investment", "No investment accounts found.")}
       </div>
       
       {/* Show message when no accounts match search */}
       {accounts.length > 0 && filteredAccounts.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="text-6xl mb-4">ðŸ”</div>
             <h3 className="text-xl font-semibold mb-2">No Accounts Match Your Search</h3>
             <p className="text-muted-foreground mb-6">
               No accounts found matching "{searchTerm}". Try searching by account name, institution, type, or owner.
@@ -841,7 +844,7 @@ export default function Accounts() {
       {accounts.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-6xl mb-4">🏦</div>
+            <div className="text-6xl mb-4">ðŸ¦</div>
             <h3 className="text-xl font-semibold mb-2">No Accounts Yet</h3>
             <p className="text-muted-foreground mb-6">
               Get started by adding your first account or scanning a bank statement
@@ -855,10 +858,10 @@ export default function Accounts() {
                 variant="outline"
                 className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
               >
-                📄 Scan Bank Statement
+                ðŸ“„ Scan Bank Statement
               </Button>
               <Button onClick={() => setShowAccountForm(true)}>
-                ➕ Add Account Manually
+                âž• Add Account Manually
               </Button>
             </div>
           </CardContent>
@@ -915,12 +918,12 @@ export default function Accounts() {
                     <div className="text-center">
                       <div className="mb-2">
                         <div className="inline-flex items-center gap-2 text-green-700">
-                          <span className="text-2xl">📄</span>
+                          <span className="text-2xl">ðŸ“„</span>
                           <span className="font-medium">{uploadedFile.name}</span>
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • {uploadedFile.type}
+                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB â€¢ {uploadedFile.type}
                       </div>
                       <Button
                         size="sm"
@@ -937,7 +940,7 @@ export default function Accounts() {
                   ) : (
                     <div className="text-center">
                       <div className="mb-4">
-                        <span className="text-4xl">⬆️</span>
+                        <span className="text-4xl">â¬†ï¸</span>
                       </div>
                       <div className="text-lg font-medium text-foreground mb-2">
                         Upload Bank Statement
@@ -946,7 +949,7 @@ export default function Accounts() {
                         Drop an image or PDF here, or click to browse
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Supports JPEG, PNG, PDF • Max 10MB
+                        Supports JPEG, PNG, PDF â€¢ Max 10MB
                       </div>
                     </div>
                   )}
@@ -973,7 +976,7 @@ export default function Accounts() {
                   <canvas ref={canvasRef} className="hidden" />
                   
                   <div className="border rounded-lg p-6 text-center bg-muted/20 mt-2">
-                    <div className="text-2xl mb-2">📹</div>
+                    <div className="text-2xl mb-2">ðŸ“¹</div>
                     <div className="text-sm text-muted-foreground">
                       {isScanning ? 'Starting camera and scanning...' : 'Camera will start when you tap "Capture & Scan"'}
                     </div>
@@ -995,7 +998,7 @@ export default function Accounts() {
                         Scanning...
                       </>
                     ) : (
-                      <>📸 Capture & Scan</>
+                      <>ðŸ“¸ Capture & Scan</>
                     )}
                   </Button>
                   
@@ -1011,7 +1014,7 @@ export default function Accounts() {
                         Processing...
                       </>
                     ) : (
-                      <>⬆️ Scan Uploaded File</>
+                      <>â¬†ï¸ Scan Uploaded File</>
                     )}
                   </Button>
                   
@@ -1038,14 +1041,14 @@ export default function Accounts() {
                       // Don't automatically start camera, let user choose method again
                     }}
                   >
-                    {lastScanMethod === 'upload' ? '📄 Scan Another Document' : '🔄 Scan Again'}
+                    {lastScanMethod === 'upload' ? 'ðŸ“„ Scan Another Document' : 'ðŸ”„ Scan Again'}
                   </Button>
                 </div>
                 
                 {parsedAccounts.length > 0 ? (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">🎉 Detected Accounts ({parsedAccounts.length})</CardTitle>
+                      <CardTitle className="text-lg">ðŸŽ‰ Detected Accounts ({parsedAccounts.length})</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         Review and adjust categories for each account before creating them
                       </p>
@@ -1065,8 +1068,8 @@ export default function Accounts() {
                               <div>
                                 <div className="font-medium text-foreground">{account.name}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {account.institution} • {account.type}
-                                  {account.mask && ` • ending in ${account.mask}`}
+                                  {account.institution} â€¢ {account.type}
+                                  {account.mask && ` â€¢ ending in ${account.mask}`}
                                 </div>
                               </div>
                             </div>
@@ -1090,10 +1093,10 @@ export default function Accounts() {
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="PERSONAL">🏠 Personal</SelectItem>
-                                <SelectItem value="CREDIT">💳 Credit</SelectItem>
-                                <SelectItem value="BUSINESS">🏢 Business</SelectItem>
-                                <SelectItem value="INVESTMENT">📈 Investment</SelectItem>
+                                <SelectItem value="PERSONAL">ðŸ  Personal</SelectItem>
+                                <SelectItem value="CREDIT">ðŸ’³ Credit</SelectItem>
+                                <SelectItem value="BUSINESS">ðŸ¢ Business</SelectItem>
+                                <SelectItem value="INVESTMENT">ðŸ“ˆ Investment</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1104,7 +1107,7 @@ export default function Accounts() {
                 ) : (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">❌ No Accounts Detected</CardTitle>
+                      <CardTitle className="text-lg">âŒ No Accounts Detected</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         Could not automatically parse account information. Check the raw text below.
                       </p>
@@ -1121,7 +1124,7 @@ export default function Accounts() {
                 )}
                 
                 <div className="text-sm text-muted-foreground">
-                  💡 <strong>Next steps:</strong> {parsedAccounts.length > 0 
+                  ðŸ’¡ <strong>Next steps:</strong> {parsedAccounts.length > 0 
                     ? "Review the detected accounts above and click 'Create Accounts' to add them to your account list."
                     : "The scanner couldn't detect accounts automatically. You can try scanning again or use the 'Add Account' button to create accounts manually."
                   }
@@ -1141,7 +1144,7 @@ export default function Accounts() {
                           Creating {parsedAccounts.length} accounts...
                         </>
                       ) : (
-                        <>✨ Create {parsedAccounts.length} Accounts</>
+                        <>âœ¨ Create {parsedAccounts.length} Accounts</>
                       )}
                     </Button>
                   ) : (
@@ -1155,7 +1158,7 @@ export default function Accounts() {
                       variant="outline"
                       data-testid="button-manual-create-account"
                     >
-                      ➕ Add Account Manually
+                      âž• Add Account Manually
                     </Button>
                   )}
                   <Button 
@@ -1185,14 +1188,24 @@ export default function Accounts() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <button
+              type="button"
               onClick={confirmDeleteAccount}
               disabled={deleteAccountMutation.isPending}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               data-testid="button-confirm-delete"
+              style={{
+                backgroundColor: "#dc2626",
+                color: "#ffffff",
+                border: "1px solid #dc2626",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontWeight: 600,
+                cursor: deleteAccountMutation.isPending ? "not-allowed" : "pointer",
+                opacity: deleteAccountMutation.isPending ? 0.6 : 1,
+              }}
             >
               {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account"}
-            </AlertDialogAction>
+            </button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

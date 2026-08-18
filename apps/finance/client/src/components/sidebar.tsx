@@ -1,168 +1,168 @@
 import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, HelpCircle, CreditCard } from "lucide-react";
-import { CreditCardPaymentForm } from "@/components/credit-card-payment-form";
+
+import {
+  ArrowLeftRight,
+  BarChart3,
+  Building2,
+  CreditCard,
+  HelpCircle,
+  Landmark,
+  ReceiptText,
+  Tags,
+  TrendingUp,
+  WalletCards,
+} from "lucide-react";
+
+import { cn } from "@finance/lib/utils";
+import { CreditCardPaymentForm } from "@finance/components/credit-card-payment-form";
 
 const navigation = [
   {
     name: "Dashboard",
-    href: "/",
-    icon: "fas fa-chart-pie",
+    href: "/finance",
+    icon: BarChart3,
   },
   {
     name: "Accounts",
-    href: "/accounts",
-    icon: "fas fa-university",
+    href: "/finance/accounts",
+    icon: WalletCards,
   },
   {
     name: "Transfers",
-    href: "/transfers",
-    icon: "fas fa-exchange-alt",
+    href: "/finance/transfers",
+    icon: ArrowLeftRight,
   },
   {
     name: "Categories",
-    href: "/categories",
-    icon: "fas fa-tags",
+    href: "/finance/categories",
+    icon: Tags,
   },
   {
     name: "Businesses",
-    href: "/businesses",
-    icon: "fas fa-briefcase",
+    href: "/finance/businesses",
+    icon: Building2,
   },
   {
     name: "Cash Flow",
-    href: "/cash-flow",
-    icon: "fas fa-chart-line",
+    href: "/finance/cash-flow",
+    icon: TrendingUp,
   },
   {
     name: "Balance Sheet",
-    href: "/balance-sheet",
-    icon: "fas fa-balance-scale",
+    href: "/finance/balance-sheet",
+    icon: Landmark,
   },
   {
     name: "Reports",
-    href: "/reports",
-    icon: "fas fa-chart-line",
+    href: "/finance/reports",
+    icon: ReceiptText,
   },
   {
     name: "Help",
-    href: "/help",
+    href: "/finance/help",
     icon: HelpCircle,
   },
 ];
 
+function isActiveRoute(location: string, href: string) {
+  if (href === "/finance") {
+    return location === "/finance";
+  }
+
+  return (
+    location === href ||
+    location.startsWith(`${href}/`)
+  );
+}
+
 export function Sidebar() {
   const [location] = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showCreditCardPayment, setShowCreditCardPayment] = useState(false);
+
+  const [
+    showCreditCardPayment,
+    setShowCreditCardPayment,
+  ] = useState(false);
 
   return (
     <>
-      {/* Mobile header with menu and logout */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-card border-b border-border z-50 flex items-center justify-between p-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          data-testid="button-mobile-menu"
-        >
-          {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
-        </Button>
-        
-        <h1 className="text-lg font-bold text-foreground">FinanceWatch</h1>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.location.href = '/api/logout'}
-          data-testid="button-mobile-logout"
-        >
-          <LogOut size={16} />
-        </Button>
-      </div>
+      <aside className="w-[260px] shrink-0 flex-col border-r border-border bg-card md:flex hidden">
+        <div className="border-b border-border px-5 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-white">
+              <WalletCards className="h-5 w-5" />
+            </div>
 
-      {/* Mobile overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black/50 z-40" 
-          onClick={() => setIsMobileMenuOpen(false)}
-          data-testid="mobile-menu-overlay"
-        ></div>
-      )}
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold text-foreground">
+                FinanceWatch
+              </h1>
 
-      <aside className={cn(
-        "w-64 bg-card border-r border-border flex-shrink-0 transition-transform duration-300 ease-in-out z-40 flex flex-col",
-        "md:translate-x-0 md:static md:z-auto md:h-screen",
-        isMobileMenuOpen ? "fixed inset-y-0 left-0 translate-x-0 mt-16" : "fixed inset-y-0 left-0 -translate-x-full md:translate-x-0 md:mt-0"
-      )}>
-      <div className="p-6 border-b border-border">
-        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <i className="fas fa-receipt text-primary"></i>
-          FinanceWatch
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Account Management</p>
-      </div>
-      
-      <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
-        {navigation.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors",
-              location === item.href
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground hover:bg-accent"
-            )}
-            onClick={() => setIsMobileMenuOpen(false)}
-            data-testid={`nav-${item.name.toLowerCase()}`}
-          >
-            {typeof item.icon === 'string' ? (
-              <i className={`${item.icon} w-4`}></i>
-            ) : (
-              <item.icon size={16} />
-            )}
-            {item.name}
-          </Link>
-        ))}
-
-        <button
-          onClick={() => {
-            setShowCreditCardPayment(true);
-            setIsMobileMenuOpen(false);
-          }}
-          className="flex items-center gap-3 px-3 py-2 rounded-md font-medium transition-colors text-foreground hover:bg-accent w-full text-left"
-        >
-          <CreditCard size={16} />
-          Pay Credit Card
-        </button>
-      </nav>
-
-      <div className="p-4 space-y-3 mt-auto">
-        <div className="bg-accent rounded-lg p-3">
-          <div className="text-xs text-muted-foreground mb-1">Today's Balance Status</div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-secondary rounded-full"></div>
-            <span className="text-sm font-medium text-foreground">Reconciled</span>
+              <p className="text-xs text-muted-foreground">
+                Account Management
+              </p>
+            </div>
           </div>
         </div>
-        
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={() => window.location.href = '/api/logout'}
-          data-testid="button-logout"
-        >
-          <i className="fas fa-sign-out-alt mr-2"></i>
-          Logout
-        </Button>
-      </div>
-    </aside>
 
-      <CreditCardPaymentForm open={showCreditCardPayment} onOpenChange={setShowCreditCardPayment} />
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const active = isActiveRoute(
+              location,
+              item.href,
+            );
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-accent",
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() =>
+              setShowCreditCardPayment(true)
+            }
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <CreditCard className="h-4 w-4 shrink-0" />
+            Pay Credit Card
+          </button>
+        </nav>
+
+        <div className="border-t border-border p-3">
+          <div className="rounded-xl bg-accent p-3">
+            <div className="mb-1 text-xs text-muted-foreground">
+              Today's Balance Status
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-emerald-500" />
+
+              <span className="text-sm font-medium text-foreground">
+                Reconciled
+              </span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <CreditCardPaymentForm
+        open={showCreditCardPayment}
+        onOpenChange={setShowCreditCardPayment}
+      />
     </>
   );
 }

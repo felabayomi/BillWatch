@@ -1,26 +1,26 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TransferForm } from "@/components/transfer-form";
-import { CreditCardPaymentForm } from "@/components/credit-card-payment-form";
-import { ExpenseForm } from "@/components/expense-form";
-import { BillPaymentForm } from "@/components/bill-payment-form";
-import { IncomeForm } from "@/components/income-form";
-import { EditTransactionForm } from "@/components/edit-transaction-form";
-import { EditTransferForm } from "@/components/edit-transfer-form";
-import { InvestmentForm } from "@/components/investment-form";
-import { formatCurrency, formatShortDate } from "@/lib/format";
-import { type TransactionWithDetails, type AccountWithBalance } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { useToast } from "@finance/hooks/use-toast";
+import { apiRequest } from "@finance/lib/queryClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Badge } from "@finance/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@finance/components/ui/tabs";
+import { TransferForm } from "@finance/components/transfer-form";
+import { CreditCardPaymentForm } from "@finance/components/credit-card-payment-form";
+import { ExpenseForm } from "@finance/components/expense-form";
+import { BillPaymentForm } from "@finance/components/bill-payment-form";
+import { IncomeForm } from "@finance/components/income-form";
+import { EditTransactionForm } from "@finance/components/edit-transaction-form";
+import { EditTransferForm } from "@finance/components/edit-transfer-form";
+import { InvestmentForm } from "@finance/components/investment-form";
+import { formatCurrency, formatShortDate } from "@finance/lib/format";
+import { type TransactionWithDetails, type AccountWithBalance } from "@finance-shared/schema";
 import { Plus, ArrowRight, Home, ShoppingCart, Receipt, TrendingUp, Landmark, Pencil, Trash2, CreditCard, Search, X, Calendar, ChevronDown, FileText, Eye, EyeOff, Wallet } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@finance/components/ui/input";
 import { Link } from "wouter";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { getLocalISODate } from "@/lib/format";
+import { Popover, PopoverContent, PopoverTrigger } from "@finance/components/ui/popover";
+import { getLocalISODate } from "@finance/lib/format";
 
 export default function Transfers() {
   const [showTransferForm, setShowTransferForm] = useState(false);
@@ -58,13 +58,13 @@ export default function Transfers() {
 
   const deleteTransferMutation = useMutation({
     mutationFn: async ({ fromId, toId }: { fromId: string; toId: string }) => {
-      await apiRequest("DELETE", `/api/transactions/${fromId}`);
-      await apiRequest("DELETE", `/api/transactions/${toId}`);
+      await apiRequest("DELETE", `/api/finance/transactions/${fromId}`);
+      await apiRequest("DELETE", `/api/finance/transactions/${toId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/daily-balances"] });
       toast({ title: "Transfer deleted", description: "The transfer has been removed." });
     },
     onError: () => {
@@ -74,12 +74,12 @@ export default function Transfers() {
 
   const deleteTransactionMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/transactions/${id}`);
+      await apiRequest("DELETE", `/api/finance/transactions/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/daily-balances"] });
       toast({ title: "Transaction deleted", description: "The transaction has been removed." });
     },
     onError: () => {
@@ -100,9 +100,9 @@ export default function Transfers() {
   };
 
   const { data: accounts = [] } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
     queryFn: async () => {
-      const response = await fetch("/api/accounts", { credentials: "include" });
+      const response = await fetch("/api/finance/accounts", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       return response.json();
     },
@@ -116,9 +116,9 @@ export default function Transfers() {
 
   // Fetch all transactions to filter for transfers
   const { data: allTransactions = [], isLoading } = useQuery<TransactionWithDetails[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/finance/transactions"],
     queryFn: async () => {
-      const response = await fetch("/api/transactions", {
+      const response = await fetch("/api/finance/transactions", {
         credentials: "include",
       });
       if (!response.ok) {
@@ -601,7 +601,7 @@ export default function Transfers() {
                         
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>{formatShortDate(fromTransaction.txDate)}</span>
-                          <span>•</span>
+                          <span>â€¢</span>
                           <span>{fromTransaction.description?.replace(/^Transfer (to|from) [^:]*: /, '') || 'Transfer'}</span>
                         </div>
                       </div>
@@ -778,7 +778,7 @@ export default function Transfers() {
                             
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span>{formatShortDate(fromTransaction.txDate)}</span>
-                              <span>•</span>
+                              <span>â€¢</span>
                               <span>{fromTransaction.description || 'Credit Card Payment'}</span>
                             </div>
                           </div>
@@ -935,7 +935,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {expense.accountName}
                             </span>
-                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground">â€¢</span>
                             <span className="text-sm text-muted-foreground">
                               {expense.categoryName}
                             </span>
@@ -943,7 +943,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(expense.txDate)}</span>
-                            <span>•</span>
+                            <span>â€¢</span>
                             <span>{expense.description || 'Expense'}</span>
                             {expense.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1115,7 +1115,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {bill.accountName}
                             </span>
-                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground">â€¢</span>
                             <span className="text-sm text-muted-foreground">
                               {bill.categoryName}
                             </span>
@@ -1123,7 +1123,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(bill.txDate)}</span>
-                            <span>•</span>
+                            <span>â€¢</span>
                             <span>{bill.description || 'Bill Payment'}</span>
                             {bill.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1295,7 +1295,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {income.accountName}
                             </span>
-                            <span className="text-muted-foreground">•</span>
+                            <span className="text-muted-foreground">â€¢</span>
                             <span className="text-sm text-muted-foreground">
                               {income.categoryName}
                             </span>
@@ -1303,7 +1303,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(income.txDate)}</span>
-                            <span>•</span>
+                            <span>â€¢</span>
                             <span>{income.description || 'Income'}</span>
                             {income.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1389,19 +1389,19 @@ export default function Transfers() {
                             <p className="text-sm font-medium truncate">{tx.description || 'Investment'}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span>{tx.accountName}</span>
-                              <span>•</span>
+                              <span>â€¢</span>
                               <span>{tx.categoryName}</span>
-                              <span>•</span>
+                              <span>â€¢</span>
                               <span>{formatShortDate(tx.txDate)}</span>
                               {tx.taxOnly && (
                                 <>
-                                  <span>•</span>
+                                  <span>â€¢</span>
                                   <span className="text-amber-600 font-medium">Tax Only</span>
                                 </>
                               )}
                               {tx.isPersonal && (
                                 <>
-                                  <span>•</span>
+                                  <span>â€¢</span>
                                   <span className="text-purple-600 font-medium">Personal</span>
                                 </>
                               )}

@@ -1,6 +1,19 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, date, timestamp, check, jsonb, index, unique, boolean, foreignKey } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import {
+  pgTable,
+  text,
+  varchar,
+  integer,
+  date,
+  timestamp,
+  check,
+  jsonb,
+  index,
+  unique,
+  uniqueIndex,
+  boolean,
+  foreignKey,
+} from "drizzle-orm/pg-core";import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const accounts = pgTable("accounts", {
@@ -94,19 +107,54 @@ export const transactions = pgTable("transactions", {
   }),
 }));
 
-export const dailyBalances = pgTable("daily_balances", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  balDate: date("bal_date").notNull(),
-  accountId: varchar("account_id").notNull().references(() => accounts.id),
-  openingCents: integer("opening_cents").notNull(),
-  inflowCents: integer("inflow_cents").notNull(),
-  outflowCents: integer("outflow_cents").notNull(),
-  transferInCents: integer("transfer_in_cents").notNull(),
-  transferOutCents: integer("transfer_out_cents").notNull(),
-  adjustmentCents: integer("adjustment_cents").notNull(),
-  closingCents: integer("closing_cents").notNull(),
-});
+export const dailyBalances = pgTable(
+  "daily_balances",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+
+    userId: varchar("user_id")
+      .notNull(),
+
+    balDate: date("bal_date")
+      .notNull(),
+
+    accountId: varchar("account_id")
+      .notNull()
+      .references(() => accounts.id),
+
+    openingCents: integer("opening_cents")
+      .notNull(),
+
+    inflowCents: integer("inflow_cents")
+      .notNull(),
+
+    outflowCents: integer("outflow_cents")
+      .notNull(),
+
+    transferInCents: integer("transfer_in_cents")
+      .notNull(),
+
+    transferOutCents: integer("transfer_out_cents")
+      .notNull(),
+
+    adjustmentCents: integer("adjustment_cents")
+      .notNull(),
+
+    closingCents: integer("closing_cents")
+      .notNull(),
+  },
+  (table) => ({
+    userAccountDateUniqueIdx: uniqueIndex(
+      "daily_balances_user_account_date_unique_idx",
+    ).on(
+      table.userId,
+      table.accountId,
+      table.balDate,
+    ),
+  }),
+);
 
 export const cashFlowEntries = pgTable("cash_flow_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -119,7 +167,11 @@ export const cashFlowEntries = pgTable("cash_flow_entries", {
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 }, (table) => ({
-  userDateUnique: unique().on(table.userId, table.date),
+  userAccountDateUnique: unique().on(
+    table.userId,
+    table.accountId,
+    table.balDate
+  ),
 }));
 
 // Authentication tables

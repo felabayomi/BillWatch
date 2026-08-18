@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency } from "@finance/lib/format";
 import { Printer, FileText, TrendingUp, TrendingDown, DollarSign, Building2, User, Receipt, Lock } from "lucide-react";
 
 type TxRow = {
@@ -50,7 +50,7 @@ function kindLabel(kind: string | null) {
     case "transfer": return "Transfer";
     case "investment": return "Investment";
     case "adjustment": return "Adjustment";
-    default: return kind ?? "—";
+    default: return kind ?? "â€”";
   }
 }
 
@@ -81,12 +81,12 @@ export default function AccountantView() {
   const [endDate, setEndDate] = useState("");
 
   const { data, isLoading, isError } = useQuery<PublicData>({
-    queryKey: ["/api/public/accountant", token, startDate, endDate],
+    queryKey: ["/api/finance/public/accountant", token, startDate, endDate],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (startDate) params.set("startDate", startDate);
       if (endDate) params.set("endDate", endDate);
-      const res = await fetch(`/api/public/accountant/${token}?${params}`);
+      const res = await fetch(`/api/finance/public/accountant/${token}?${params}`);
       if (!res.ok) throw new Error("Not found");
       return res.json();
     },
@@ -163,7 +163,7 @@ export default function AccountantView() {
             Scope: {typeLabel}
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs bg-gray-100 text-gray-700 border border-gray-200 px-3 py-1.5 rounded-full font-medium">
-            Period shown: {formatDate(data.fromDate)} – {formatDate(data.toDate)}
+            Period shown: {formatDate(data.fromDate)} â€“ {formatDate(data.toDate)}
           </span>
         </div>
 
@@ -249,10 +249,10 @@ export default function AccountantView() {
                   <tr key={tx.id} className="hover:bg-gray-50 print:hover:bg-white">
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">{formatDate(tx.txDate)}</td>
                     <td className="px-4 py-2.5 text-gray-800 max-w-xs">
-                      <span className="line-clamp-2">{tx.description || "—"}</span>
+                      <span className="line-clamp-2">{tx.description || "â€”"}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">{tx.accountName || "—"}</td>
-                    <td className="px-4 py-2.5 text-gray-600">{tx.categoryName || "—"}</td>
+                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">{tx.accountName || "â€”"}</td>
+                    <td className="px-4 py-2.5 text-gray-600">{tx.categoryName || "â€”"}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
                         tx.categoryKind === "income" ? "bg-green-100 text-green-700" :
@@ -272,7 +272,7 @@ export default function AccountantView() {
                       {tx.receiptPath ? (
                         <ReceiptLinks path={tx.receiptPath} />
                       ) : (
-                        <span className="text-xs text-gray-300">—</span>
+                        <span className="text-xs text-gray-300">â€”</span>
                       )}
                     </td>
                     <td className="px-4 py-2.5 text-center print:hidden">

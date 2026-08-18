@@ -3,16 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
-import { type TransactionWithDetails, type Category, type Business, type Account } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Textarea } from "@finance/components/ui/textarea";
+import { Checkbox } from "@finance/components/ui/checkbox";
+import { useToast } from "@finance/hooks/use-toast";
+import { type TransactionWithDetails, type Category, type Business, type Account } from "@finance-shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
 import { Search, ChevronDown, Check } from "lucide-react";
 
 const editTransactionSchema = z.object({
@@ -90,22 +90,22 @@ export function EditTransactionForm({ open, onOpenChange, transaction }: EditTra
   }, []);
 
   const { data: accounts = [] } = useQuery<Account[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/finance/categories"],
     queryFn: async () => {
-      const response = await fetch("/api/categories", { credentials: "include" });
+      const response = await fetch("/api/finance/categories", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
     },
   });
 
   const { data: businesses = [] } = useQuery<Business[]>({
-    queryKey: ["/api/businesses"],
+    queryKey: ["/api/finance/businesses"],
     queryFn: async () => {
-      const response = await fetch("/api/businesses", { credentials: "include" });
+      const response = await fetch("/api/finance/businesses", { credentials: "include" });
       if (!response.ok) throw new Error('Failed to fetch businesses');
       return response.json();
     },
@@ -132,7 +132,7 @@ export function EditTransactionForm({ open, onOpenChange, transaction }: EditTra
         amountCents = -rawAmount;
       }
       
-      const response = await apiRequest("PUT", `/api/transactions/${transaction.id}`, {
+      const response = await apiRequest("PUT", `/api/finance/transactions/${transaction.id}`, {
         accountId: data.accountId,
         amountCents,
         txDate: data.txDate,
@@ -145,9 +145,9 @@ export function EditTransactionForm({ open, onOpenChange, transaction }: EditTra
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/daily-balances"] });
       toast({
         title: "Transaction updated",
         description: "Your transaction has been saved successfully.",

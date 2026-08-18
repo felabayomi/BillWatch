@@ -1,16 +1,16 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Textarea } from "@finance/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { insertTransactionSchema, type Account, type Category } from "@shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
+import { insertTransactionSchema, type Account, type Category } from "@finance-shared/schema";
 
 const formSchema = insertTransactionSchema.extend({
   amount: z.string().min(1, "Amount is required"),
@@ -31,12 +31,12 @@ export function TransactionForm({ open, onOpenChange, defaultAccountId }: Transa
   const queryClient = useQueryClient();
 
   const { data: accounts = [] } = useQuery<Account[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
     enabled: open,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/finance/categories"],
     enabled: open,
   });
 
@@ -58,15 +58,15 @@ export function TransactionForm({ open, onOpenChange, defaultAccountId }: Transa
         amountCents: Math.round(parseFloat(amount) * 100),
       };
       
-      const response = await apiRequest("POST", "/api/transactions", transactionData);
+      const response = await apiRequest("POST", "/api/finance/transactions", transactionData);
       return response.json();
     },
     onSuccess: async () => {
       // Force refetch of all related queries to immediately update UI
       await Promise.all([
-        queryClient.refetchQueries({ queryKey: ["/api/transactions"], type: "all" }),
-        queryClient.refetchQueries({ queryKey: ["/api/accounts"], type: "all" }),
-        queryClient.refetchQueries({ queryKey: ["/api/daily-summary"], type: "all" })
+        queryClient.refetchQueries({ queryKey: ["/api/finance/transactions"], type: "all" }),
+        queryClient.refetchQueries({ queryKey: ["/api/finance/accounts"], type: "all" }),
+        queryClient.refetchQueries({ queryKey: ["/api/finance/daily-summary"], type: "all" })
       ]);
       toast({ title: "Success", description: "Transaction created successfully" });
       onOpenChange(false);
@@ -118,7 +118,7 @@ export function TransactionForm({ open, onOpenChange, defaultAccountId }: Transa
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.owner} • {account.type})
+                          {account.name} ({account.owner} â€¢ {account.type})
                         </SelectItem>
                       ))}
                     </SelectContent>

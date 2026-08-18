@@ -1,9 +1,9 @@
 import { MDXProvider } from '@mdx-js/react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@finance/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@finance/components/ui/alert'
+import { Badge } from '@finance/components/ui/badge'
+import { Separator } from '@finance/components/ui/separator'
+import { Button } from '@finance/components/ui/button'
 import { Code } from 'lucide-react'
 
 // Custom components for MDX rendering

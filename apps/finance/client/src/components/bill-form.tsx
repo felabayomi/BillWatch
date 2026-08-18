@@ -1,15 +1,15 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { insertBillSchema, type Account, type Category } from "@shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
+import { insertBillSchema, type Account, type Category } from "@finance-shared/schema";
 
 const formSchema = insertBillSchema.extend({
   amount: z.string().min(1, "Amount is required"),
@@ -29,12 +29,12 @@ export function BillForm({ open, onOpenChange }: BillFormProps) {
   const queryClient = useQueryClient();
 
   const { data: accounts = [] } = useQuery<Account[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
     enabled: open,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/finance/categories"],
     enabled: open,
   });
 
@@ -57,11 +57,11 @@ export function BillForm({ open, onOpenChange }: BillFormProps) {
         amountCents: Math.round(parseFloat(amount) * 100),
       };
       
-      const response = await apiRequest("POST", "/api/bills", billData);
+      const response = await apiRequest("POST", "/api/finance/bills", billData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/bills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/bills"] });
       toast({ title: "Success", description: "Bill created successfully" });
       onOpenChange(false);
       form.reset();
@@ -157,7 +157,7 @@ export function BillForm({ open, onOpenChange }: BillFormProps) {
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.owner} • {account.type})
+                          {account.name} ({account.owner} â€¢ {account.type})
                         </SelectItem>
                       ))}
                     </SelectContent>

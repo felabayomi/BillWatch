@@ -3,14 +3,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { type TransactionWithDetails } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Textarea } from "@finance/components/ui/textarea";
+import { useToast } from "@finance/hooks/use-toast";
+import { type TransactionWithDetails } from "@finance-shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
 
 const editTransferSchema = z.object({
   amount: z.string()
@@ -64,13 +64,13 @@ export function EditTransferForm({ open, onOpenChange, fromTransaction, toTransa
       const fromDesc = `Transfer to ${toTransaction.accountName}: ${data.description || 'Transfer'}`;
       const toDesc = `Transfer from ${fromTransaction.accountName}: ${data.description || 'Transfer'}`;
       
-      await apiRequest("PUT", `/api/transactions/${fromTransaction.id}`, {
+      await apiRequest("PUT", `/api/finance/transactions/${fromTransaction.id}`, {
         amountCents: -amountCents,
         txDate: data.txDate,
         description: fromDesc,
       });
       
-      await apiRequest("PUT", `/api/transactions/${toTransaction.id}`, {
+      await apiRequest("PUT", `/api/finance/transactions/${toTransaction.id}`, {
         amountCents: amountCents,
         txDate: data.txDate,
         description: toDesc,
@@ -79,9 +79,9 @@ export function EditTransferForm({ open, onOpenChange, fromTransaction, toTransa
       return true;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/daily-balances"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/daily-balances"] });
       toast({
         title: "Transfer updated",
         description: "Both sides of the transfer have been updated.",

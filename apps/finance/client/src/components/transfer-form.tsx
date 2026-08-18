@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { AccountCombobox } from "@/components/account-combobox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@finance/components/ui/button";
+import { Input } from "@finance/components/ui/input";
+import { AccountCombobox } from "@finance/components/account-combobox";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@finance/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@finance/components/ui/dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { type AccountWithBalance } from "@shared/schema";
+import { apiRequest } from "@finance/lib/queryClient";
+import { useToast } from "@finance/hooks/use-toast";
+import { type AccountWithBalance } from "@finance-shared/schema";
 import { ArrowRight } from "lucide-react";
-import { getLocalISODate } from "@/lib/format";
+import { getLocalISODate } from "@finance/lib/format";
 
 const transferFormSchema = z.object({
   fromAccountId: z.string().min(1, "Please select a source account"),
@@ -62,13 +62,13 @@ export function TransferForm({ open, onOpenChange, defaultDate }: TransferFormPr
 
   // Fetch accounts for selection
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", today],
+    queryKey: ["/api/finance/accounts", today],
     enabled: open, // Only fetch when dialog is open
   });
 
   const createTransferMutation = useMutation({
     mutationFn: async (data: TransferFormData) => {
-      return await apiRequest("POST", "/api/transfers", {
+      return await apiRequest("POST", "/api/finance/transfers", {
         fromAccountId: data.fromAccountId,
         toAccountId: data.toAccountId,
         amount: parseFloat(data.amount),
@@ -80,13 +80,13 @@ export function TransferForm({ open, onOpenChange, defaultDate }: TransferFormPr
       // Get current date for invalidation (handles midnight transitions)
       const currentDate = getLocalISODate();
       // Invalidate and force refetch of accounts queries to update balances immediately
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
       // CRITICAL: Invalidate both transaction date and current date queries
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", variables.txDate] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", currentDate] });
-      queryClient.refetchQueries({ queryKey: ["/api/accounts"] });
-      queryClient.refetchQueries({ queryKey: ["/api/accounts", currentDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts", variables.txDate] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts", currentDate] });
+      queryClient.refetchQueries({ queryKey: ["/api/finance/accounts"] });
+      queryClient.refetchQueries({ queryKey: ["/api/finance/accounts", currentDate] });
       toast({
         title: "Transfer created",
         description: "Your transfer has been successfully processed.",

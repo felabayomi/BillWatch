@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BillForm } from "@/components/bill-form";
-import { formatCurrency } from "@/lib/format";
-import { type Bill } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { BillForm } from "@finance/components/bill-form";
+import { formatCurrency } from "@finance/lib/format";
+import { type Bill } from "@finance-shared/schema";
 
 export default function Bills() {
   const [showBillForm, setShowBillForm] = useState(false);
 
   const { data: bills = [], isLoading } = useQuery<Bill[]>({
-    queryKey: ["/api/bills"],
+    queryKey: ["/api/finance/bills"],
   });
 
   if (isLoading) {

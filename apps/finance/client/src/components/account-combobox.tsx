@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "@finance/lib/utils";
+import { Button } from "@finance/components/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -9,13 +9,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from "@finance/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { type AccountWithBalance } from "@shared/schema";
+} from "@finance/components/ui/popover";
+import { type AccountWithBalance } from "@finance-shared/schema";
 
 interface AccountComboboxProps {
   accounts: AccountWithBalance[];

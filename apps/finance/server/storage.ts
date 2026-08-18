@@ -19,7 +19,7 @@ import {
   type Business,
   type InsertBusiness,
   inferCategory
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   // Users

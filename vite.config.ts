@@ -4,18 +4,51 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+
+      "@shared": path.resolve(
+        import.meta.dirname,
+        "shared"
+      ),
+
+      "@assets": path.resolve(
+        import.meta.dirname,
+        "attached_assets"
+      ),
+
+      "@finance": path.resolve(
+        import.meta.dirname,
+        "apps",
+        "finance",
+        "client",
+        "src"
+      ),
+
+      "@finance-shared": path.resolve(
+        import.meta.dirname,
+        "apps",
+        "finance",
+        "shared"
+      ),
     },
   },
+
   root: path.resolve(import.meta.dirname, "client"),
+
+  envDir: path.resolve(import.meta.dirname),
+
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(
+      import.meta.dirname,
+      "dist",
+      "public"
+    ),
     emptyOutDir: true,
   },
+
   server: {
     fs: {
       strict: true,

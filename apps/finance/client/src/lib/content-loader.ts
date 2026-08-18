@@ -40,7 +40,7 @@ export async function loadMDXContent(category: string, slug: string): Promise<MD
   
   try {
     // Fetch the raw MDX file content from the server using API route
-    const fetchUrl = `/api/content/${category}/${slug}.mdx`
+    const fetchUrl = `/api/finance/content/${category}/${slug}.mdx`
     const response = await fetch(fetchUrl)
     if (!response.ok) {
       console.error(`Failed to fetch ${fetchUrl}: ${response.status}`)
@@ -77,7 +77,7 @@ lastModified: 2025-09-13
 Content is currently being loaded. Please check back soon.
 
 <Alert>
-<AlertTitle>📝 Note</AlertTitle>
+<AlertTitle>ðŸ“ Note</AlertTitle>
 <AlertDescription>
 This content is in development. Full documentation will be available soon.
 </AlertDescription>

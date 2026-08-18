@@ -1,11 +1,21 @@
-import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import PlatformNav from "@/platform/PlatformNav";
+import ToolAccessGate from "@/platform/ToolAccessGate";
+import { Switch, Route, Redirect } from "wouter";
+import {
+  queryClient,
+  setAuthTokenProvider,
+} from "./lib/queryClient";import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useUser } from "@clerk/clerk-react";
-import { Component, type ErrorInfo, type ReactNode } from "react";
-
+import { useAuth, useUser } from "@clerk/clerk-react";
+import {
+  Component,
+  useEffect,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
+import PlatformHome from "@/platform/PlatformHome";
+import { FinancialOSMembershipProvider } from "@/platform/MembershipContext";
 import Home from "@/pages/home";
 import Landing from "@/pages/Landing";
 import Calendar from "@/pages/calendar";
@@ -25,38 +35,173 @@ import { BillDetails } from "@/pages/bill-details";
 import Accounts from "@/pages/accounts";
 import SignInPage from "@/pages/SignInPage";
 import NotFound from "@/pages/not-found";
-import { MembershipGate } from "@/components/MembershipGate";
+import FinanceApp from "../../apps/finance/client/src/App";
 
+function ClerkApiBridge() {
+  const { getToken, isLoaded } = useAuth();
+
+  useEffect(() => {
+    if (!isLoaded) {
+      return;
+    }
+
+    setAuthTokenProvider(async () => {
+      return await getToken();
+    });
+
+    return () => {
+      setAuthTokenProvider(async () => null);
+    };
+  }, [getToken, isLoaded]);
+
+  return null;
+}
 function ProtectedRoutes() {
   return (
-    <MembershipGate>
+    <div className="min-h-screen bg-slate-50">
+      <PlatformNav />
+
       <Switch>
-        <Route path="/app" component={Home} />
-        <Route path="/bill/:id" component={BillDetails} />
-        <Route path="/payment-success" component={PaymentSuccess} />
-        <Route
-          path="/payment-monitoring"
-          component={UnifiedPaymentMonitoring}
-        />
-        <Route path="/calendar" component={Calendar} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/accounts" component={Accounts} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/admin-trigger" component={AdminTrigger} />
+        {/* FinanceWatch */}
+        <Route path="/finance/*">
+          {() => (
+            <ToolAccessGate tool="FinanceWatch">
+              <FinanceApp />
+            </ToolAccessGate>
+          )}
+        </Route>
+
+        <Route path="/finance">
+          {() => (
+            <ToolAccessGate tool="FinanceWatch">
+              <FinanceApp />
+            </ToolAccessGate>
+          )}
+        </Route>
+
+        {/* BillWatch */}
+<Route path="/bills">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <Home />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/bill/:id">
+  {(params) => (
+    <ToolAccessGate tool="BillWatch">
+      <BillDetails params={params} />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/payment-success">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <PaymentSuccess />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/payment-monitoring">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <UnifiedPaymentMonitoring />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/calendar">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <Calendar />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/reports">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <Reports />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/accounts">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <Accounts />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/settings">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <Settings />
+    </ToolAccessGate>
+  )}
+</Route>
+
+<Route path="/bills/admin-trigger">
+  {() => (
+    <ToolAccessGate tool="BillWatch">
+      <AdminTrigger />
+    </ToolAccessGate>
+  )}
+</Route>
+
         <Route component={NotFound} />
       </Switch>
-    </MembershipGate>
+    </div>
   );
 }
-
 function Router() {
   const { isSignedIn, isLoaded } = useUser();
 
   return (
     <Switch>
       {/* Public landing page — always stays public */}
-      <Route path="/" component={Landing} />
+<Route path="/">
+  {() => (
+    <div className="min-h-screen bg-slate-50">
+      <PlatformNav />
+      <PlatformHome />
+    </div>
+  )}
+</Route>
+<Route path="/app">
+  <Redirect to="/bills" />
+</Route>
 
+<Route path="/calendar">
+  <Redirect to="/bills/calendar" />
+</Route>
+
+<Route path="/reports">
+  <Redirect to="/bills/reports" />
+</Route>
+
+<Route path="/accounts">
+  <Redirect to="/bills/accounts" />
+</Route>
+
+<Route path="/settings">
+  <Redirect to="/bills/settings" />
+</Route>
+
+<Route path="/payment-monitoring">
+  <Redirect to="/bills/payment-monitoring" />
+</Route>
+
+<Route path="/payment-success">
+  <Redirect to="/bills/payment-success" />
+</Route>
+
+<Route path="/admin-trigger">
+  <Redirect to="/bills/admin-trigger" />
+</Route>
       {/* Public routes */}
       <Route path="/payment" component={Payment} />
       <Route path="/sign-in" component={SignInPage} />
@@ -66,6 +211,11 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
       <Route path="/faq" component={FAQ} />
+<Route path="/bill/:id">
+  {(params) => (
+    <Redirect to={`/bills/bill/${params.id}`} />
+  )}
+</Route>
 
       {/* Everything below this point requires authentication */}
       <Route path="*">
@@ -79,8 +229,13 @@ function Router() {
           }
 
           if (!isSignedIn) {
-            return <Landing />;
-          }
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <PlatformNav />
+      <PlatformHome />
+    </div>
+  );
+}
 
           return <ProtectedRoutes />;
         }}
@@ -133,13 +288,16 @@ function App() {
   return (
     <AppErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <ClerkApiBridge />
+
+        <FinancialOSMembershipProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </FinancialOSMembershipProvider>
       </QueryClientProvider>
     </AppErrorBoundary>
   );
 }
-
 export default App;

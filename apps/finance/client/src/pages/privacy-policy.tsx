@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
 import { ArrowLeft, Receipt, Shield, Lock, Eye, Database, Users, Globe, Cloud, Brain } from "lucide-react";
 import { Link } from "wouter";
 
@@ -52,13 +52,13 @@ export default function PrivacyPolicy() {
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Financial Data You Enter</h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    All financial information you manually enter is stored in your account — account details, transactions, balances, categories, bills, businesses, and transfers. This data is entirely yours and under your control.
+                    All financial information you manually enter is stored in your account â€” account details, transactions, balances, categories, bills, businesses, and transfers. This data is entirely yours and under your control.
                   </p>
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Receipt & Invoice Images</h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Receipt and invoice images you upload are stored in Replit Object Storage — a secure cloud file system. These files are private to your account and linked to individual transactions.
+                    Receipt and invoice images you upload are stored in Replit Object Storage â€” a secure cloud file system. These files are private to your account and linked to individual transactions.
                   </p>
                 </div>
                 <div>
@@ -118,7 +118,7 @@ export default function PrivacyPolicy() {
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Accountant Share Links</h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    When you generate a share link for your accountant, you control the scope (year and transaction type). The link is read-only and can be revoked by you at any time. Anyone with the link URL can view that scoped data until it is revoked — treat it like a shared document.
+                    When you generate a share link for your accountant, you control the scope (year and transaction type). The link is read-only and can be revoked by you at any time. Anyone with the link URL can view that scoped data until it is revoked â€” treat it like a shared document.
                   </p>
                 </div>
               </CardContent>
@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
                 <div>
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Service Provision</h4>
                   <p className="text-gray-600 dark:text-gray-300">
-                    Your data is used solely to operate FinanceWatch — balance calculations, reports, bill tracking, syncing, and all other features you use.
+                    Your data is used solely to operate FinanceWatch â€” balance calculations, reports, bill tracking, syncing, and all other features you use.
                   </p>
                 </div>
                 <div>

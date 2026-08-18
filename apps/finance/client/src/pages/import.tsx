@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { formatCurrency } from "@/lib/format";
-import { apiRequest } from "@/lib/queryClient";
-import { type AccountWithBalance } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Input } from "@finance/components/ui/input";
+import { Label } from "@finance/components/ui/label";
+import { Textarea } from "@finance/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { useToast } from "@finance/hooks/use-toast";
+import { formatCurrency } from "@finance/lib/format";
+import { apiRequest } from "@finance/lib/queryClient";
+import { type AccountWithBalance } from "@finance-shared/schema";
 
 interface ImportData {
   date: string;
@@ -30,9 +30,9 @@ export default function Import() {
   const today = new Date().toISOString().split('T')[0];
 
   const { data: accounts = [] } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts", today],
+    queryKey: ["/api/finance/accounts", today],
     queryFn: async () => {
-      const response = await fetch(`/api/accounts?date=${today}`, {
+      const response = await fetch(`/api/finance/accounts?date=${today}`, {
         credentials: "include",
       });
       if (!response.ok) {
@@ -44,14 +44,14 @@ export default function Import() {
 
   const importMutation = useMutation({
     mutationFn: async (data: ImportData[]) => {
-      return apiRequest("POST", "/api/import-external-data", { transactions: data });
+      return apiRequest("POST", "/api/finance/import-external-data", { transactions: data });
     },
     onSuccess: () => {
       toast({
         title: "Import Successful",
         description: "External data has been imported and account balances updated.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/accounts"] });
       setCsvData("");
       setManualEntries([{ date: new Date().toISOString().split('T')[0], accountId: "", amount: 0, description: "", type: 'expense' }]);
     },

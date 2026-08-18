@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+import { cn } from "@finance/lib/utils"
+import { Badge } from "@finance/components/ui/badge"
 
 export interface StepProps extends React.HTMLAttributes<HTMLDivElement> {
   step: number

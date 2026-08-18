@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatCurrency, formatShortDate, getAccountTypeIcon } from "@/lib/format";
-import { type AccountWithBalance, type TransactionWithDetails } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Badge } from "@finance/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@finance/components/ui/select";
+import { formatCurrency, formatShortDate, getAccountTypeIcon } from "@finance/lib/format";
+import { type AccountWithBalance, type TransactionWithDetails } from "@finance-shared/schema";
 import { ArrowLeft, TrendingUp, TrendingDown, ArrowLeftRight, Calendar } from "lucide-react";
 
 export default function AccountLedger() {
@@ -15,15 +15,15 @@ export default function AccountLedger() {
   const [monthFilter, setMonthFilter] = useState("all");
 
   const { data: accounts = [] } = useQuery<AccountWithBalance[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/finance/accounts"],
   });
 
   const account = accounts.find(a => a.id === accountId);
 
   const { data: allTransactions = [], isLoading: txLoading } = useQuery<TransactionWithDetails[]>({
-    queryKey: ["/api/transactions", accountId],
+    queryKey: ["/api/finance/transactions", accountId],
     queryFn: async () => {
-      const response = await fetch(`/api/transactions?accountId=${accountId}`, {
+      const response = await fetch(`/api/finance/transactions?accountId=${accountId}`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch transactions");
@@ -250,7 +250,7 @@ export default function AccountLedger() {
                 <tbody>
                   <tr className="border-b border-border bg-muted/30">
                     <td className="py-2.5 px-2 text-muted-foreground text-xs">
-                      {account?.openingDate ? formatShortDate(account.openingDate) : "—"}
+                      {account?.openingDate ? formatShortDate(account.openingDate) : "â€”"}
                     </td>
                     <td className="py-2.5 px-2 font-medium italic text-muted-foreground" colSpan={2}>
                       Opening Balance
@@ -274,7 +274,7 @@ export default function AccountLedger() {
                         <td className="py-2.5 px-2">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">
-                              {row.transaction.description || "—"}
+                              {row.transaction.description || "â€”"}
                             </span>
                             {isTransfer && (
                               <Badge variant="outline" className="text-xs px-1.5 py-0">

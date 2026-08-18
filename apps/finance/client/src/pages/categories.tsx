@@ -3,9 +3,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Badge } from "@finance/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -13,22 +13,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@finance/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+} from "@finance/components/ui/select";
+import { Input } from "@finance/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@finance/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,10 +39,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { type Category, insertCategorySchema } from "@shared/schema";
+} from "@finance/components/ui/alert-dialog";
+import { useToast } from "@finance/hooks/use-toast";
+import { apiRequest, queryClient } from "@finance/lib/queryClient";
+import { type Category, insertCategorySchema } from "@finance-shared/schema";
 import { Plus, Edit, Trash2, Home, Tag } from "lucide-react";
 import { Link } from "wouter";
 
@@ -60,9 +60,9 @@ export default function Categories() {
 
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
+    queryKey: ["/api/finance/categories"],
     queryFn: async () => {
-      const response = await fetch("/api/categories", {
+      const response = await fetch("/api/finance/categories", {
         credentials: "include",
       });
       if (!response.ok) {
@@ -75,10 +75,10 @@ export default function Categories() {
   // Create category mutation
   const createCategoryMutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
-      return await apiRequest("POST", "/api/categories", data);
+      return await apiRequest("POST", "/api/finance/categories", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/categories"] });
       setShowCreateForm(false);
       toast({
         title: "Success",
@@ -97,10 +97,10 @@ export default function Categories() {
   // Update category mutation
   const updateCategoryMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CategoryFormData> }) => {
-      return await apiRequest("PUT", `/api/categories/${id}`, data);
+      return await apiRequest("PUT", `/api/finance/categories/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/categories"] });
       setEditingCategory(null);
       toast({
         title: "Success", 
@@ -119,10 +119,10 @@ export default function Categories() {
   // Delete category mutation
   const deleteCategoryMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest("DELETE", `/api/categories/${id}`);
+      return await apiRequest("DELETE", `/api/finance/categories/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/finance/categories"] });
       toast({
         title: "Success",
         description: "Category deleted successfully",

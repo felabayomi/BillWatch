@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { TransactionForm } from "@/components/transaction-form";
-import { formatCurrency, formatShortDate, getCurrencyColor, getCategoryColor } from "@/lib/format";
-import { type TransactionWithDetails } from "@shared/schema";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@finance/components/ui/table";
+import { Badge } from "@finance/components/ui/badge";
+import { TransactionForm } from "@finance/components/transaction-form";
+import { formatCurrency, formatShortDate, getCurrencyColor, getCategoryColor } from "@finance/lib/format";
+import { type TransactionWithDetails } from "@finance-shared/schema";
 import { RefreshCw, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@finance/hooks/use-toast";
 
 export default function Transactions() {
   const queryClient = useQueryClient();
@@ -17,7 +17,7 @@ export default function Transactions() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const { data: transactions = [], isLoading } = useQuery<TransactionWithDetails[]>({
-    queryKey: ["/api/transactions"],
+    queryKey: ["/api/finance/transactions"],
     refetchOnWindowFocus: true,
     staleTime: 30000,
   });
@@ -25,8 +25,8 @@ export default function Transactions() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      await queryClient.refetchQueries({ queryKey: ["/api/transactions"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/finance/transactions"] });
+      await queryClient.refetchQueries({ queryKey: ["/api/finance/transactions"] });
       toast({ title: "Refreshed", description: "Transactions updated with latest data." });
     } catch (error) {
       toast({ title: "Error", description: "Failed to refresh transactions.", variant: "destructive" });

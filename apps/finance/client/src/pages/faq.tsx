@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@finance/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@finance/components/ui/card";
 import { ArrowLeft, Receipt, HelpCircle, Shield, CreditCard, Calculator, Database, Smartphone, Mail } from "lucide-react";
 import { Link } from "wouter";
 
@@ -117,7 +117,7 @@ export default function FAQ() {
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">How does daily balance reconciliation work?</h4>
                   <p className="text-gray-600 dark:text-gray-300">
                     Each day, the system calculates your account balances using the formula: Opening Balance + 
-                    Inflows - Outflows ± Adjustments = Closing Balance. This ensures mathematical accuracy and 
+                    Inflows - Outflows Â± Adjustments = Closing Balance. This ensures mathematical accuracy and 
                     helps you catch discrepancies early.
                   </p>
                 </div>
