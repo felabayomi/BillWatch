@@ -387,18 +387,18 @@ export default function HelpDemo() {
                     
                     <Callout variant="tip" title="Search Tips">
                       Try searching for terms like "account", "security", "balance", or "loading". 
-                      Use â†‘â†“ arrow keys to navigate results and Enter to select.
+                      Use ↑↓ arrow keys to navigate results and Enter to select.
                     </Callout>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div>
                         <h4 className="font-semibold mb-2">Features:</h4>
                         <ul className="text-sm space-y-1 text-gray-600 dark:text-gray-300">
-                          <li>â€¢ Fuzzy search with Fuse.js</li>
-                          <li>â€¢ Keyboard navigation (â†‘â†“)</li>
-                          <li>â€¢ Result highlighting</li>
-                          <li>â€¢ Deep linking with URL params</li>
-                          <li>â€¢ Type-based categorization</li>
+                          <li>• Fuzzy search with Fuse.js</li>
+                          <li>• Keyboard navigation (↑↓)</li>
+                          <li>• Result highlighting</li>
+                          <li>• Deep linking with URL params</li>
+                          <li>• Type-based categorization</li>
                         </ul>
                       </div>
                       <div>

@@ -454,7 +454,7 @@ export default function Dashboard() {
                                 <div className="min-w-0">
                                   <Link to={`/accounts/${account.id}/ledger`} className="font-medium text-sm text-foreground hover:text-primary transition-colors truncate block">{account.name}</Link>
                                   <div className="text-xs text-muted-foreground truncate">
-                                    {account.institution || account.owner} â€¢ {account.type}
+                                    {account.institution || account.owner} • {account.type}
                                     {account.type === 'savings' && (account as any).apyPercent && (
                                       <span className="ml-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                                         {(account as any).apyPercent}% APY

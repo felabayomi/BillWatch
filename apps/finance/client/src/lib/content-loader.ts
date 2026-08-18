@@ -77,7 +77,7 @@ lastModified: 2025-09-13
 Content is currently being loaded. Please check back soon.
 
 <Alert>
-<AlertTitle>ðŸ“ Note</AlertTitle>
+<AlertTitle>📝 Note</AlertTitle>
 <AlertDescription>
 This content is in development. Full documentation will be available soon.
 </AlertDescription>

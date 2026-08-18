@@ -169,7 +169,7 @@ export default function Accounts() {
       accountName: /(?:360\s*)?(?:checking|savings|performance\s*savings|quicksilver|platinum\s*secured|cash\s*rewards|venture|savor|money\s*market|cd|certificate)/i,
       
       // Balance patterns ($123.45, 123.45, -123.45)
-      balance: /[âˆ’-]?\$?(\d{1,3}(?:,?\d{3})*\.?\d{0,2})/,
+      balance: /[−-]?\$?(\d{1,3}(?:,?\d{3})*\.?\d{0,2})/,
       
       // Last 4 digits patterns (...1234, ****1234, ending in 1234)
       last4: /(?:\.{3,4}|ending\s+in\s*|\*{4})(\d{4})/i,
@@ -215,7 +215,7 @@ export default function Accounts() {
         const balanceStr = balanceMatch[1].replace(/,/g, '');
         const balance = parseFloat(balanceStr);
         if (!isNaN(balance)) {
-          currentAccount.openingBalance = line.includes('-') || line.includes('âˆ’') ? -balance : balance;
+          currentAccount.openingBalance = line.includes('-') || line.includes('−') ? -balance : balance;
         }
       }
       
@@ -653,7 +653,7 @@ const response = await apiRequest(
                 <div>
                   <div className="font-medium text-foreground">{account.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    {account.institution} â€¢ {account.type}
+                    {account.institution} • {account.type}
                     {account.type === 'savings' && (account as any).apyPercent && (
                       <span className="ml-2 text-green-700 dark:text-green-400 font-medium">
                         {(account as any).apyPercent}% APY
@@ -705,11 +705,11 @@ const response = await apiRequest(
                       onClick={() => handleEditAccount(account)}
                       data-testid={`menu-edit-account-${account.id}`}
                     >
-                      âœï¸ Edit Details
+                      ✏️ Edit Details
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger data-testid={`menu-move-category-${account.id}`}>
-                        ðŸ“ Move to...
+                        📁 Move to...
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
                         <DropdownMenuItem
@@ -717,9 +717,9 @@ const response = await apiRequest(
                           disabled={getAccountCategory(account) === 'PERSONAL' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-personal-${account.id}`}
                         >
-                          ðŸ  Personal
+                          🏠 Personal
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'PERSONAL' && (
-                            <span className="ml-auto text-xs">â³</span>
+                            <span className="ml-auto text-xs">⏳</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -727,9 +727,9 @@ const response = await apiRequest(
                           disabled={getAccountCategory(account) === 'CREDIT' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-credit-${account.id}`}
                         >
-                          ðŸ’³ Credit
+                          💳 Credit
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'CREDIT' && (
-                            <span className="ml-auto text-xs">â³</span>
+                            <span className="ml-auto text-xs">⏳</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -737,9 +737,9 @@ const response = await apiRequest(
                           disabled={getAccountCategory(account) === 'BUSINESS' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-business-${account.id}`}
                         >
-                          ðŸ¢ Business
+                          🏢 Business
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'BUSINESS' && (
-                            <span className="ml-auto text-xs">â³</span>
+                            <span className="ml-auto text-xs">⏳</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -747,9 +747,9 @@ const response = await apiRequest(
                           disabled={getAccountCategory(account) === 'INVESTMENT' || moveToCategoryMutation.isPending}
                           data-testid={`menu-move-investment-${account.id}`}
                         >
-                          ðŸ“ˆ Investment
+                          📈 Investment
                           {moveToCategoryMutation.isPending && getAccountCategory(account) !== 'INVESTMENT' && (
-                            <span className="ml-auto text-xs">â³</span>
+                            <span className="ml-auto text-xs">⏳</span>
                           )}
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
@@ -759,7 +759,7 @@ const response = await apiRequest(
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                       data-testid={`menu-delete-account-${account.id}`}
                     >
-                      ðŸ—‘ï¸ Delete Account
+                      🗑️ Delete Account
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -787,10 +787,10 @@ const response = await apiRequest(
             className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
             data-testid="button-scan-document"
           >
-            ðŸ“„ Scan Document
+            📄 Scan Document
           </Button>
           <Button onClick={() => setShowAccountForm(true)} data-testid="button-add-account">
-            âž• Add Account
+            ➕ Add Account
           </Button>
         </div>
       </div>
@@ -813,18 +813,18 @@ const response = await apiRequest(
 
       {/* Category Sections - Only show sections with accounts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {renderAccountSection("ðŸ’¼ Personal Accounts", personalAccounts, "personal", "No personal accounts found.")}
-        {renderAccountSection("ðŸ’° Savings Accounts", savingsAccounts, "savings", "No savings accounts found.")}
-        {renderAccountSection("ðŸ’³ Credit Accounts", creditAccounts, "credit", "No credit accounts found.")}
-        {renderAccountSection("ðŸ¢ Business Accounts", businessAccounts, "business", "No business accounts found.")}
-        {renderAccountSection("ðŸ“ˆ Investment Accounts", investmentAccounts, "investment", "No investment accounts found.")}
+        {renderAccountSection("💼 Personal Accounts", personalAccounts, "personal", "No personal accounts found.")}
+        {renderAccountSection("💰 Savings Accounts", savingsAccounts, "savings", "No savings accounts found.")}
+        {renderAccountSection("💳 Credit Accounts", creditAccounts, "credit", "No credit accounts found.")}
+        {renderAccountSection("🏢 Business Accounts", businessAccounts, "business", "No business accounts found.")}
+        {renderAccountSection("📈 Investment Accounts", investmentAccounts, "investment", "No investment accounts found.")}
       </div>
       
       {/* Show message when no accounts match search */}
       {accounts.length > 0 && filteredAccounts.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-6xl mb-4">ðŸ”</div>
+            <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-xl font-semibold mb-2">No Accounts Match Your Search</h3>
             <p className="text-muted-foreground mb-6">
               No accounts found matching "{searchTerm}". Try searching by account name, institution, type, or owner.
@@ -844,7 +844,7 @@ const response = await apiRequest(
       {accounts.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-6xl mb-4">ðŸ¦</div>
+            <div className="text-6xl mb-4">🏦</div>
             <h3 className="text-xl font-semibold mb-2">No Accounts Yet</h3>
             <p className="text-muted-foreground mb-6">
               Get started by adding your first account or scanning a bank statement
@@ -858,10 +858,10 @@ const response = await apiRequest(
                 variant="outline"
                 className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
               >
-                ðŸ“„ Scan Bank Statement
+                📄 Scan Bank Statement
               </Button>
               <Button onClick={() => setShowAccountForm(true)}>
-                âž• Add Account Manually
+                ➕ Add Account Manually
               </Button>
             </div>
           </CardContent>
@@ -918,12 +918,12 @@ const response = await apiRequest(
                     <div className="text-center">
                       <div className="mb-2">
                         <div className="inline-flex items-center gap-2 text-green-700">
-                          <span className="text-2xl">ðŸ“„</span>
+                          <span className="text-2xl">📄</span>
                           <span className="font-medium">{uploadedFile.name}</span>
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB â€¢ {uploadedFile.type}
+                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • {uploadedFile.type}
                       </div>
                       <Button
                         size="sm"
@@ -940,7 +940,7 @@ const response = await apiRequest(
                   ) : (
                     <div className="text-center">
                       <div className="mb-4">
-                        <span className="text-4xl">â¬†ï¸</span>
+                        <span className="text-4xl">⬆️</span>
                       </div>
                       <div className="text-lg font-medium text-foreground mb-2">
                         Upload Bank Statement
@@ -949,7 +949,7 @@ const response = await apiRequest(
                         Drop an image or PDF here, or click to browse
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        Supports JPEG, PNG, PDF â€¢ Max 10MB
+                        Supports JPEG, PNG, PDF • Max 10MB
                       </div>
                     </div>
                   )}
@@ -976,7 +976,7 @@ const response = await apiRequest(
                   <canvas ref={canvasRef} className="hidden" />
                   
                   <div className="border rounded-lg p-6 text-center bg-muted/20 mt-2">
-                    <div className="text-2xl mb-2">ðŸ“¹</div>
+                    <div className="text-2xl mb-2">📹</div>
                     <div className="text-sm text-muted-foreground">
                       {isScanning ? 'Starting camera and scanning...' : 'Camera will start when you tap "Capture & Scan"'}
                     </div>
@@ -998,7 +998,7 @@ const response = await apiRequest(
                         Scanning...
                       </>
                     ) : (
-                      <>ðŸ“¸ Capture & Scan</>
+                      <>📸 Capture & Scan</>
                     )}
                   </Button>
                   
@@ -1014,7 +1014,7 @@ const response = await apiRequest(
                         Processing...
                       </>
                     ) : (
-                      <>â¬†ï¸ Scan Uploaded File</>
+                      <>⬆️ Scan Uploaded File</>
                     )}
                   </Button>
                   
@@ -1041,14 +1041,14 @@ const response = await apiRequest(
                       // Don't automatically start camera, let user choose method again
                     }}
                   >
-                    {lastScanMethod === 'upload' ? 'ðŸ“„ Scan Another Document' : 'ðŸ”„ Scan Again'}
+                    {lastScanMethod === 'upload' ? '📄 Scan Another Document' : '🔄 Scan Again'}
                   </Button>
                 </div>
                 
                 {parsedAccounts.length > 0 ? (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">ðŸŽ‰ Detected Accounts ({parsedAccounts.length})</CardTitle>
+                      <CardTitle className="text-lg">🎉 Detected Accounts ({parsedAccounts.length})</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         Review and adjust categories for each account before creating them
                       </p>
@@ -1068,8 +1068,8 @@ const response = await apiRequest(
                               <div>
                                 <div className="font-medium text-foreground">{account.name}</div>
                                 <div className="text-sm text-muted-foreground">
-                                  {account.institution} â€¢ {account.type}
-                                  {account.mask && ` â€¢ ending in ${account.mask}`}
+                                  {account.institution} • {account.type}
+                                  {account.mask && ` • ending in ${account.mask}`}
                                 </div>
                               </div>
                             </div>
@@ -1093,10 +1093,10 @@ const response = await apiRequest(
                                 <SelectValue placeholder="Select category" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="PERSONAL">ðŸ  Personal</SelectItem>
-                                <SelectItem value="CREDIT">ðŸ’³ Credit</SelectItem>
-                                <SelectItem value="BUSINESS">ðŸ¢ Business</SelectItem>
-                                <SelectItem value="INVESTMENT">ðŸ“ˆ Investment</SelectItem>
+                                <SelectItem value="PERSONAL">🏠 Personal</SelectItem>
+                                <SelectItem value="CREDIT">💳 Credit</SelectItem>
+                                <SelectItem value="BUSINESS">🏢 Business</SelectItem>
+                                <SelectItem value="INVESTMENT">📈 Investment</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -1107,7 +1107,7 @@ const response = await apiRequest(
                 ) : (
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">âŒ No Accounts Detected</CardTitle>
+                      <CardTitle className="text-lg">❌ No Accounts Detected</CardTitle>
                       <p className="text-sm text-muted-foreground">
                         Could not automatically parse account information. Check the raw text below.
                       </p>
@@ -1124,7 +1124,7 @@ const response = await apiRequest(
                 )}
                 
                 <div className="text-sm text-muted-foreground">
-                  ðŸ’¡ <strong>Next steps:</strong> {parsedAccounts.length > 0 
+                  💡 <strong>Next steps:</strong> {parsedAccounts.length > 0 
                     ? "Review the detected accounts above and click 'Create Accounts' to add them to your account list."
                     : "The scanner couldn't detect accounts automatically. You can try scanning again or use the 'Add Account' button to create accounts manually."
                   }
@@ -1144,7 +1144,7 @@ const response = await apiRequest(
                           Creating {parsedAccounts.length} accounts...
                         </>
                       ) : (
-                        <>âœ¨ Create {parsedAccounts.length} Accounts</>
+                        <>✨ Create {parsedAccounts.length} Accounts</>
                       )}
                     </Button>
                   ) : (
@@ -1158,7 +1158,7 @@ const response = await apiRequest(
                       variant="outline"
                       data-testid="button-manual-create-account"
                     >
-                      âž• Add Account Manually
+                      ➕ Add Account Manually
                     </Button>
                   )}
                   <Button 

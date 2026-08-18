@@ -157,7 +157,7 @@ export function BillForm({ open, onOpenChange }: BillFormProps) {
                     <SelectContent>
                       {accounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name} ({account.owner} â€¢ {account.type})
+                          {account.name} ({account.owner} • {account.type})
                         </SelectItem>
                       ))}
                     </SelectContent>

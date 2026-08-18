@@ -242,11 +242,11 @@ export function AccountForm({ open, onOpenChange }: AccountFormProps) {
                       <SelectTrigger data-testid="select-category"><SelectValue placeholder="Select category" /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="PERSONAL">ðŸ  Personal</SelectItem>
-                      <SelectItem value="SAVINGS">ðŸ’° Savings</SelectItem>
-                      <SelectItem value="CREDIT">ðŸ’³ Credit</SelectItem>
-                      <SelectItem value="BUSINESS">ðŸ¢ Business</SelectItem>
-                      <SelectItem value="INVESTMENT">ðŸ“ˆ Investment</SelectItem>
+                      <SelectItem value="PERSONAL">🏠 Personal</SelectItem>
+                      <SelectItem value="SAVINGS">💰 Savings</SelectItem>
+                      <SelectItem value="CREDIT">💳 Credit</SelectItem>
+                      <SelectItem value="BUSINESS">🏢 Business</SelectItem>
+                      <SelectItem value="INVESTMENT">📈 Investment</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

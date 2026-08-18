@@ -129,7 +129,7 @@ function AuthenticatedFinanceApp() {
       <div className="flex min-h-[calc(100vh-3.5rem)] w-full bg-background">
         <Sidebar />
 
-        <main className="min-w-0 flex-1 overflow-x-hidden">
+<main className="min-w-0 flex-1 overflow-x-hidden pt-14 lg:pt-0">
           <Switch>
             <Route
               path="/finance"

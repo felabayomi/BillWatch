@@ -69,7 +69,7 @@ export function AccountantSharePanel() {
               <Eye className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
               <div>
                 <p className="font-semibold text-green-800">Read Only</p>
-                <p className="text-green-700 text-xs mt-0.5">They can view transactions and open receipts â€” but cannot edit, delete, or change anything.</p>
+                <p className="text-green-700 text-xs mt-0.5">They can view transactions and open receipts — but cannot edit, delete, or change anything.</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -100,7 +100,7 @@ export function AccountantSharePanel() {
                 <Input
                   value={label}
                   onChange={e => setLabel(e.target.value)}
-                  placeholder="e.g. My CPA â€“ 2025 Taxes"
+                  placeholder="e.g. My CPA – 2025 Taxes"
                 />
               </div>
               <div>

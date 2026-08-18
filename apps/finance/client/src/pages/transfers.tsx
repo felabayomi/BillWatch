@@ -252,13 +252,13 @@ export default function Transfers() {
           <p className="text-muted-foreground">Manage transfers, expenses, bills, and income</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/">
+          <Link to="/finance">
             <Button variant="outline" className="flex items-center gap-2" data-testid="button-back-dashboard">
               <Home className="h-4 w-4" />
               Dashboard
             </Button>
           </Link>
-          <Link to="/accounts">
+          <Link to="/finance/accounts">
             <Button variant="outline" className="flex items-center gap-2" data-testid="button-back-accounts">
               <Landmark className="h-4 w-4" />
               Accounts
@@ -601,7 +601,7 @@ export default function Transfers() {
                         
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>{formatShortDate(fromTransaction.txDate)}</span>
-                          <span>â€¢</span>
+                          <span>•</span>
                           <span>{fromTransaction.description?.replace(/^Transfer (to|from) [^:]*: /, '') || 'Transfer'}</span>
                         </div>
                       </div>
@@ -778,7 +778,7 @@ export default function Transfers() {
                             
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                               <span>{formatShortDate(fromTransaction.txDate)}</span>
-                              <span>â€¢</span>
+                              <span>•</span>
                               <span>{fromTransaction.description || 'Credit Card Payment'}</span>
                             </div>
                           </div>
@@ -935,7 +935,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {expense.accountName}
                             </span>
-                            <span className="text-muted-foreground">â€¢</span>
+                            <span className="text-muted-foreground">•</span>
                             <span className="text-sm text-muted-foreground">
                               {expense.categoryName}
                             </span>
@@ -943,7 +943,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(expense.txDate)}</span>
-                            <span>â€¢</span>
+                            <span>•</span>
                             <span>{expense.description || 'Expense'}</span>
                             {expense.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1115,7 +1115,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {bill.accountName}
                             </span>
-                            <span className="text-muted-foreground">â€¢</span>
+                            <span className="text-muted-foreground">•</span>
                             <span className="text-sm text-muted-foreground">
                               {bill.categoryName}
                             </span>
@@ -1123,7 +1123,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(bill.txDate)}</span>
-                            <span>â€¢</span>
+                            <span>•</span>
                             <span>{bill.description || 'Bill Payment'}</span>
                             {bill.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1295,7 +1295,7 @@ export default function Transfers() {
                             <span className="font-medium text-foreground">
                               {income.accountName}
                             </span>
-                            <span className="text-muted-foreground">â€¢</span>
+                            <span className="text-muted-foreground">•</span>
                             <span className="text-sm text-muted-foreground">
                               {income.categoryName}
                             </span>
@@ -1303,7 +1303,7 @@ export default function Transfers() {
                           
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>{formatShortDate(income.txDate)}</span>
-                            <span>â€¢</span>
+                            <span>•</span>
                             <span>{income.description || 'Income'}</span>
                             {income.taxOnly && (
                               <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-50 text-amber-700 border-amber-300">
@@ -1389,19 +1389,19 @@ export default function Transfers() {
                             <p className="text-sm font-medium truncate">{tx.description || 'Investment'}</p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span>{tx.accountName}</span>
-                              <span>â€¢</span>
+                              <span>•</span>
                               <span>{tx.categoryName}</span>
-                              <span>â€¢</span>
+                              <span>•</span>
                               <span>{formatShortDate(tx.txDate)}</span>
                               {tx.taxOnly && (
                                 <>
-                                  <span>â€¢</span>
+                                  <span>•</span>
                                   <span className="text-amber-600 font-medium">Tax Only</span>
                                 </>
                               )}
                               {tx.isPersonal && (
                                 <>
-                                  <span>â€¢</span>
+                                  <span>•</span>
                                   <span className="text-purple-600 font-medium">Personal</span>
                                 </>
                               )}

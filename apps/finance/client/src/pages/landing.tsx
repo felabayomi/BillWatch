@@ -267,7 +267,7 @@ export default function Landing() {
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Through DTL Navigation Tools, our suite of connected financial applications, clients gain clear 
-                visibility and control over every aspect of their financial lives â€” from income and spending to 
+                visibility and control over every aspect of their financial lives — from income and spending to 
                 debt elimination, saving, investing, and wealth tracking.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -284,11 +284,11 @@ export default function Landing() {
                 step by step from income to wealth:
               </p>
               <p className="text-lg font-semibold text-foreground leading-relaxed text-center">
-                Income â†’ Spend â†’ Track â†’ Eliminate Debt â†’ Save â†’ Invest â†’ Build Wealth â†’ Create Legacy
+                Income → Spend → Track → Eliminate Debt → Save → Invest → Build Wealth → Create Legacy
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 We don't believe in quick fixes or fragmented advice. We believe in systems, clarity, and 
-                consistency â€” one system, guiding every money decision, for a lifetime.
+                consistency — one system, guiding every money decision, for a lifetime.
               </p>
             </div>
           </div>
@@ -346,7 +346,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-incomelift"
                 >
-                  Visit IncomeLift â†’
+                  Visit IncomeLift →
                 </a>
               </CardContent>
             </Card>
@@ -365,7 +365,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-steadyvest"
                 >
-                  Visit SteadyVest â†’
+                  Visit SteadyVest →
                 </a>
               </CardContent>
             </Card>
@@ -384,7 +384,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-billwatch"
                 >
-                  Visit BillWatch â†’
+                  Visit BillWatch →
                 </a>
               </CardContent>
             </Card>
@@ -403,7 +403,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-diydebt"
                 >
-                  Visit DIY Debt â†’
+                  Visit DIY Debt →
                 </a>
               </CardContent>
             </Card>
@@ -422,7 +422,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-felixpay"
                 >
-                  Visit Felix Pay â†’
+                  Visit Felix Pay →
                 </a>
               </CardContent>
             </Card>
@@ -441,7 +441,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-expensewatch"
                 >
-                  Visit ExpenseWatch â†’
+                  Visit ExpenseWatch →
                 </a>
               </CardContent>
             </Card>
@@ -454,7 +454,7 @@ export default function Landing() {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-muted-foreground mb-4">Complete financial overview</p>
-                <span className="text-primary font-medium">You're here! â†’</span>
+                <span className="text-primary font-medium">You're here! →</span>
               </CardContent>
             </Card>
 
@@ -472,7 +472,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-felixcheckbook"
                 >
-                  Visit Felix CheckBook â†’
+                  Visit Felix CheckBook →
                 </a>
               </CardContent>
             </Card>
@@ -491,7 +491,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-savingspro"
                 >
-                  Visit SavingsPro â†’
+                  Visit SavingsPro →
                 </a>
               </CardContent>
             </Card>
@@ -510,7 +510,7 @@ export default function Landing() {
                   className="text-primary hover:underline font-medium"
                   data-testid="link-wealthwatch"
                 >
-                  Visit WealthWatch â†’
+                  Visit WealthWatch →
                 </a>
               </CardContent>
             </Card>
@@ -569,7 +569,7 @@ export default function Landing() {
               </a>
             </div>
             <p className="text-sm text-muted-foreground">
-              Â© 2026 Debt to Legacy LLC. All rights reserved.
+              © 2026 Debt to Legacy LLC. All rights reserved.
             </p>
           </div>
         </div>

@@ -13,7 +13,7 @@ const steps = [
     content: (
       <div className="space-y-4">
         <p className="text-gray-600 dark:text-gray-300">
-          FinanceWatch uses <strong>Felix Pay Single Sign-On</strong>. Click "Sign In with SSO" on the home page. Your account is created automatically using your Felix Pay membership credentials â€” no separate password needed.
+          FinanceWatch uses <strong>Felix Pay Single Sign-On</strong>. Click "Sign In with SSO" on the home page. Your account is created automatically using your Felix Pay membership credentials — no separate password needed.
         </p>
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
           <p className="text-sm text-blue-700 dark:text-blue-300">
@@ -34,7 +34,7 @@ const steps = [
           If you have business expenses to track, go to <strong>Businesses</strong> in the sidebar and create each of your businesses. You can have as many as you need.
         </p>
         <p className="text-gray-600 dark:text-gray-300">
-          Once businesses are set up, you can link individual accounts directly to a specific business â€” so any transaction synced on that account is automatically assigned to the right company without manual intervention.
+          Once businesses are set up, you can link individual accounts directly to a specific business — so any transaction synced on that account is automatically assigned to the right company without manual intervention.
         </p>
       </div>
     ),
@@ -66,7 +66,7 @@ const steps = [
             To add an account:
           </h4>
           <ol className="list-decimal list-inside text-gray-600 dark:text-gray-300 space-y-1 text-sm">
-            <li>Go to Accounts â†’ Add Account</li>
+            <li>Go to Accounts → Add Account</li>
             <li>Enter the account name and institution</li>
             <li>Choose account type and owner (Personal or Business)</li>
             <li>If business, select which business it belongs to from the dropdown</li>
@@ -75,7 +75,7 @@ const steps = [
         </div>
         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
           <p className="text-sm text-amber-700 dark:text-amber-300">
-            <strong>Tip:</strong> Linking a business account to a specific business means any transaction synced from ExpenseWatch, BillWatch, or IncomeLift on that account is automatically flagged for the correct business â€” no manual work.
+            <strong>Tip:</strong> Linking a business account to a specific business means any transaction synced from ExpenseWatch, BillWatch, or IncomeLift on that account is automatically flagged for the correct business — no manual work.
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ const steps = [
             Business & Personal Flags
           </h4>
           <p className="text-gray-600 dark:text-gray-300 text-sm">
-            Any transaction â€” even on a personal account â€” can be marked as a business expense and assigned to a specific business. Use the "Mark as Personal" flag to exclude transactions from business reports.
+            Any transaction — even on a personal account — can be marked as a business expense and assigned to a specific business. Use the "Mark as Personal" flag to exclude transactions from business reports.
           </p>
         </div>
       </div>
@@ -130,7 +130,7 @@ const steps = [
             Batch Receipt Upload
           </h4>
           <p className="text-gray-600 dark:text-gray-300 text-sm">
-            Have a stack of receipts? Use Batch Upload to import multiple receipts at once. The AI reads each one and creates a draft transaction â€” you review and confirm before they're saved. Multiple receipts can also be attached to a single transaction.
+            Have a stack of receipts? Use Batch Upload to import multiple receipts at once. The AI reads each one and creates a draft transaction — you review and confirm before they're saved. Multiple receipts can also be attached to a single transaction.
           </p>
         </div>
         <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
@@ -149,7 +149,7 @@ const steps = [
     content: (
       <div className="space-y-4">
         <p className="text-gray-600 dark:text-gray-300">
-          The Bills section tracks your recurring obligations â€” rent, utilities, insurance, subscriptions, loan payments, and more. Set up each bill with its amount, due date, and the account it's paid from.
+          The Bills section tracks your recurring obligations — rent, utilities, insurance, subscriptions, loan payments, and more. Set up each bill with its amount, due date, and the account it's paid from.
         </p>
         <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-1 text-sm">
           <li>Mark bills as paid when you make a payment</li>
@@ -168,10 +168,10 @@ const steps = [
     content: (
       <div className="space-y-4">
         <p className="text-gray-600 dark:text-gray-300">
-          Transfers move money between your own accounts (e.g., from checking to savings, or paying a credit card). FinanceWatch uses proper double-entry accounting â€” a transfer creates paired transactions (debit + credit) so your net worth stays accurate.
+          Transfers move money between your own accounts (e.g., from checking to savings, or paying a credit card). FinanceWatch uses proper double-entry accounting — a transfer creates paired transactions (debit + credit) so your net worth stays accurate.
         </p>
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-          <strong>Example:</strong> Paying your Chase credit card from your Chase checking â€” the checking goes down and the credit card balance decreases. Both sides are recorded automatically.
+          <strong>Example:</strong> Paying your Chase credit card from your Chase checking — the checking goes down and the credit card balance decreases. Both sides are recorded automatically.
         </div>
       </div>
     ),
@@ -187,10 +187,10 @@ const steps = [
           FinanceWatch automatically calculates your daily balance for every account using the formula:
         </p>
         <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg font-mono text-sm text-center">
-          Opening Balance + Income âˆ’ Expenses Â± Adjustments = Closing Balance
+          Opening Balance + Income − Expenses ± Adjustments = Closing Balance
         </div>
         <p className="text-gray-600 dark:text-gray-300">
-          Each day's opening balance equals the previous day's closing balance â€” mathematical continuity you can rely on. If a balance doesn't match your bank, use the Balance Correction tool to log the adjustment.
+          Each day's opening balance equals the previous day's closing balance — mathematical continuity you can rely on. If a balance doesn't match your bank, use the Balance Correction tool to log the adjustment.
         </p>
       </div>
     ),
@@ -211,7 +211,7 @@ const steps = [
             { title: "Tax Report", desc: "Business expenses grouped by category for tax filing" },
             { title: "Category Breakdown", desc: "Where your money goes, visualized" },
             { title: "Cash Flow", desc: "Day-by-day and month-by-month cash movement" },
-            { title: "Balance Sheet", desc: "All assets and liabilities at a glance â€” personal and business" },
+            { title: "Balance Sheet", desc: "All assets and liabilities at a glance — personal and business" },
             { title: "Account Transactions", desc: "Full ledger for any account" },
           ].map(r => (
             <div key={r.title} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -231,13 +231,13 @@ const steps = [
     content: (
       <div className="space-y-4">
         <p className="text-gray-600 dark:text-gray-300">
-          Go to <strong>Reports â†’ Share Tab</strong> to generate a read-only link for your accountant or tax preparer. You control exactly what they can see:
+          Go to <strong>Reports → Share Tab</strong> to generate a read-only link for your accountant or tax preparer. You control exactly what they can see:
         </p>
         <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-1 text-sm">
           <li>Choose a specific year (e.g., 2025) or all years</li>
           <li>Scope to business only, personal only, or all transactions</li>
           <li>Receipts and invoices are viewable through the link</li>
-          <li>The link is read-only â€” your accountant cannot change anything</li>
+          <li>The link is read-only — your accountant cannot change anything</li>
           <li>Revoke the link at any time to cut off access immediately</li>
         </ul>
       </div>
@@ -254,9 +254,9 @@ const steps = [
           If you use other apps in the Felix ecosystem, they can push transactions directly into FinanceWatch:
         </p>
         <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-1 text-sm">
-          <li><strong>ExpenseWatch â†’</strong> syncs expense transactions</li>
-          <li><strong>BillWatch â†’</strong> syncs bill payments</li>
-          <li><strong>IncomeLift â†’</strong> syncs income transactions</li>
+          <li><strong>ExpenseWatch →</strong> syncs expense transactions</li>
+          <li><strong>BillWatch →</strong> syncs bill payments</li>
+          <li><strong>IncomeLift →</strong> syncs income transactions</li>
         </ul>
         <p className="text-gray-600 dark:text-gray-300 text-sm">
           Synced transactions land on the correct account automatically. If that account is linked to a business, the business is assigned without any manual work. Receipts from the external apps are also stored and linked.
@@ -291,7 +291,7 @@ export default function HowToUse() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">How to Use FinanceWatch</h1>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              A complete walkthrough of every feature â€” from setup to sharing with your accountant
+              A complete walkthrough of every feature — from setup to sharing with your accountant
             </p>
           </div>
 

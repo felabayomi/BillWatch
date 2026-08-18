@@ -208,7 +208,7 @@ function HelpSearch({
                 }}
                 data-testid="help-search-clear"
               >
-                Ã—
+                ×
               </Button>
             )}
           </div>
@@ -284,11 +284,11 @@ function HelpSearch({
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-4">
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">â†‘â†“</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">↑↓</kbd>
                       Navigate
                     </span>
                     <span className="flex items-center gap-1">
-                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">â†µ</kbd>
+                      <kbd className="px-1.5 py-0.5 bg-background border rounded text-xs">↵</kbd>
                       Select
                     </span>
                     <span className="flex items-center gap-1">

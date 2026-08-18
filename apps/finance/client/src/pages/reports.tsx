@@ -242,7 +242,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold">Debt to Legacy LLC</h1>
           <p className="text-sm text-gray-600">30 N Gould St Ste R, Sheridan, WY 82801</p>
           <p className="text-sm text-gray-600">info@debttolegacy.com &middot; 240-664-2270</p>
-          <h2 className="text-lg font-semibold mt-2">FinanceWatch â€” {selectedYear} Tax Report</h2>
+          <h2 className="text-lg font-semibold mt-2">FinanceWatch — {selectedYear} Tax Report</h2>
           <p className="text-sm text-gray-600 mt-1">Generated on {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
           <p className="text-xs text-gray-500 mt-1">Prepared for tax filing purposes</p>
         </div>
@@ -451,7 +451,7 @@ export default function Reports() {
               <p className="text-sm text-muted-foreground">
                 {selectedBusinessFilter === "all"
                   ? "Business transactions for deduction filing (includes marked business expenses)"
-                  : `Tax report for ${selectedBusinessFilter} â€” ${selectedYear}`}
+                  : `Tax report for ${selectedBusinessFilter} — ${selectedYear}`}
               </p>
             </CardHeader>
             <CardContent>
@@ -593,7 +593,7 @@ export default function Reports() {
                         <div className="flex-1">
                           <div className="font-medium">{t.description || 'No description'}</div>
                           <div className="text-xs text-muted-foreground">
-                            {t.txDate} &middot; {t.categoryName || 'Uncategorized'}{t.accountName ? ` Â· ${t.accountName}` : ''}{t.taxOnly ? ' Â· Tax Only' : ''}
+                            {t.txDate} &middot; {t.categoryName || 'Uncategorized'}{t.accountName ? ` · ${t.accountName}` : ''}{t.taxOnly ? ' · Tax Only' : ''}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -849,7 +849,7 @@ export default function Reports() {
                       onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); setCategorySearch(""); }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      <span className="text-xs">âœ•</span>
+                      <span className="text-xs">✕</span>
                     </button>
                   )}
                   {showCategoryDropdown && (
@@ -1036,7 +1036,7 @@ export default function Reports() {
                               <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between">
                                   <CardTitle className="text-base">
-                                    {selectedCategory} â€” Smart Breakdown
+                                    {selectedCategory} — Smart Breakdown
                                   </CardTitle>
                                   <Button variant="ghost" size="sm" onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); }} className="text-xs">
                                     Back to All
@@ -1098,7 +1098,7 @@ export default function Reports() {
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between">
                                 <CardTitle className="text-base">
-                                  {selectedCategory} â€” {categorySearch ? `${filteredTxs.length} matches` : `${categoryTxs.length} Transactions`}
+                                  {selectedCategory} — {categorySearch ? `${filteredTxs.length} matches` : `${categoryTxs.length} Transactions`}
                                 </CardTitle>
                                 <Button variant="ghost" size="sm" onClick={() => { setSelectedCategory("all"); setCategoryFilterText(""); setCategorySearch(""); }} className="text-xs">
                                   Back to All

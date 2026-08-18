@@ -69,8 +69,8 @@ function TransactionList({ startDate, endDate, type, label }: { startDate: strin
           <div className="flex-1 min-w-0">
             <p className="font-medium truncate">{tx.description || 'No description'}</p>
             <p className="text-muted-foreground truncate">
-              {tx.accountName}{tx.categoryName ? ` Â· ${tx.categoryName}` : ''}
-              {startDate !== endDate && ` Â· ${tx.txDate}`}
+              {tx.accountName}{tx.categoryName ? ` · ${tx.categoryName}` : ''}
+              {startDate !== endDate && ` · ${tx.txDate}`}
             </p>
           </div>
           <span className={`flex-shrink-0 font-mono ${tx.amountCents >= 0 ? 'text-secondary' : 'text-destructive'}`}>

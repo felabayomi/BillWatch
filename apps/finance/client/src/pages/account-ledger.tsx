@@ -250,7 +250,7 @@ export default function AccountLedger() {
                 <tbody>
                   <tr className="border-b border-border bg-muted/30">
                     <td className="py-2.5 px-2 text-muted-foreground text-xs">
-                      {account?.openingDate ? formatShortDate(account.openingDate) : "â€”"}
+                      {account?.openingDate ? formatShortDate(account.openingDate) : "—"}
                     </td>
                     <td className="py-2.5 px-2 font-medium italic text-muted-foreground" colSpan={2}>
                       Opening Balance
@@ -274,7 +274,7 @@ export default function AccountLedger() {
                         <td className="py-2.5 px-2">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">
-                              {row.transaction.description || "â€”"}
+                              {row.transaction.description || "—"}
                             </span>
                             {isTransfer && (
                               <Badge variant="outline" className="text-xs px-1.5 py-0">

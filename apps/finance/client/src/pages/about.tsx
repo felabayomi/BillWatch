@@ -70,7 +70,7 @@ export default function About() {
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
                   Built by Debt to Legacy LLC, FinanceWatch is part of the DTL Navigation Tools suite and the 
-                  Felix Financial OS â€” helping individuals move from financial stress to long-term stability 
+                  Felix Financial OS — helping individuals move from financial stress to long-term stability 
                   and legacy creation through practical, hands-on financial management tools.
                 </p>
               </CardContent>
@@ -127,16 +127,16 @@ export default function About() {
                   {[
                     "Track checking, savings, credit, cash, investment, loan & mortgage accounts",
                     "Manual transaction entry with daily balance reconciliation",
-                    "Upload receipts and invoices â€” AI reads them and fills your form automatically",
+                    "Upload receipts and invoices — AI reads them and fills your form automatically",
                     "Batch import multiple receipts at once",
                     "Track bills and recurring payments",
                     "Double-entry transfers between accounts",
-                    "Multi-business support â€” assign expenses to specific companies",
+                    "Multi-business support — assign expenses to specific companies",
                     "Automatically link accounts to businesses for sync auto-assignment",
                     "Sync transactions from ExpenseWatch, BillWatch, and IncomeLift",
                     "QuickBooks-style reports: Income Statement, Tax Report, Balance Sheet, Cash Flow",
                     "Personal vs. business transaction flagging",
-                    "Read-only accountant share links â€” scoped by year and type",
+                    "Read-only accountant share links — scoped by year and type",
                     "Receipts visible to your accountant through the share link",
                     "Mobile-friendly, installable as a PWA",
                   ].map((feature, i) => (
@@ -182,7 +182,7 @@ export default function About() {
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
                   Through DTL Navigation Tools, our suite of connected financial applications, clients gain clear 
-                  visibility and control over every aspect of their financial lives â€” from income and spending to 
+                  visibility and control over every aspect of their financial lives — from income and spending to 
                   debt elimination, saving, investing, and wealth tracking.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
@@ -199,11 +199,11 @@ export default function About() {
                   step by step from income to wealth:
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white text-center">
-                  Income â†’ Spend â†’ Track â†’ Eliminate Debt â†’ Save â†’ Invest â†’ Build Wealth â†’ Create Legacy
+                  Income → Spend → Track → Eliminate Debt → Save → Invest → Build Wealth → Create Legacy
                 </p>
                 <p className="text-gray-600 dark:text-gray-300">
                   We don't believe in quick fixes or fragmented advice. We believe in systems, clarity, and 
-                  consistency â€” one system, guiding every money decision, for a lifetime.
+                  consistency — one system, guiding every money decision, for a lifetime.
                 </p>
               </CardContent>
             </Card>
