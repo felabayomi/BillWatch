@@ -145,8 +145,8 @@ export default function PlatformNav() {
   }
 
   return (
-    <div className="sticky top-0 z-[100] border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
-      <div className="mx-auto flex min-h-14 w-full items-center gap-2 px-3 sm:px-4">
+    <div className="sticky top-0 z-[100] border-b border-slate-200 bg-white/95 pt-[calc(env(safe-area-inset-top)+0.375rem)] sm:pt-[env(safe-area-inset-top)] shadow-sm backdrop-blur">
+      <div className="mx-auto flex h-16 w-full items-center gap-2 px-3 sm:px-4">
 
         {/* Financial OS Home */}
         <button

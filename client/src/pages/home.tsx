@@ -773,7 +773,12 @@ export default function Home() {
       <PaymentModal
         open={showPaymentModal}
         onOpenChange={setShowPaymentModal}
-        bill={bills.find(b => b.id === selectedBillId) || null}
+        bill={
+          bills.find(b => b.id === selectedBillId) ||
+          carryoverBills.find(b => b.id === selectedBillId) ||
+          allBills.find(b => b.id === selectedBillId) ||
+          null
+        }
         initialFlow={paymentFlow}
       />
 

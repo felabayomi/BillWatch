@@ -21,6 +21,23 @@ import { format, subDays, addDays, isToday, startOfDay } from "date-fns";
 export default function Dashboard() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const refreshFinanceWatch = () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/finance/accounts"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/finance/transactions"],
+      });
+    };
+
+    window.addEventListener("financewatch:refresh", refreshFinanceWatch);
+
+    return () => {
+      window.removeEventListener("financewatch:refresh", refreshFinanceWatch);
+    };
+  }, [queryClient]);
   const [showAccountForm, setShowAccountForm] = useState(false);
   const [showTransferForm, setShowTransferForm] = useState(false);
   const [showCreditCardPaymentForm, setShowCreditCardPaymentForm] = useState(false);
@@ -55,8 +72,12 @@ export default function Dashboard() {
       }
       return response.json();
     },
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchOnWindowFocus: true,
-    staleTime: 30000,
+    refetchOnReconnect: true,
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
   });
 
   const { totalAssets, totalLiabilities, netWorth } = useMemo(() => {

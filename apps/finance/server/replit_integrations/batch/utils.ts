@@ -179,4 +179,3 @@ export async function batchProcessWithSSE<T, R>(
   sendEvent({ type: "complete", processed: items.length, errors });
   return results;
 }
-

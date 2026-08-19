@@ -1,4 +1,4 @@
-import PlatformNav from "@/platform/PlatformNav";
+﻿import PlatformNav from "@/platform/PlatformNav";
 import ToolAccessGate from "@/platform/ToolAccessGate";
 import { Switch, Route, Redirect } from "wouter";
 import {
@@ -36,6 +36,8 @@ import Accounts from "@/pages/accounts";
 import SignInPage from "@/pages/SignInPage";
 import NotFound from "@/pages/not-found";
 import FinanceApp from "../../apps/finance/client/src/App";
+import ExpenseApp from "../../apps/expense/client/src/App";
+import IncomeApp from "../../apps/income/client/src/App";
 
 function ClerkApiBridge() {
   const { getToken, isLoaded } = useAuth();
@@ -75,6 +77,40 @@ function ProtectedRoutes() {
           {() => (
             <ToolAccessGate tool="FinanceWatch">
               <FinanceApp />
+            </ToolAccessGate>
+          )}
+        </Route>
+
+        {/* IncomeLift */}
+          <Route path="/income/:rest*">
+            {() => (
+              <ToolAccessGate tool="IncomeLift">
+                <IncomeApp />
+              </ToolAccessGate>
+            )}
+          </Route>
+
+          <Route path="/income">
+            {() => (
+              <ToolAccessGate tool="IncomeLift">
+                <IncomeApp />
+              </ToolAccessGate>
+            )}
+          </Route>
+
+          {/* ExpenseWatch */}
+        <Route path="/expense/:rest*">
+          {() => (
+            <ToolAccessGate tool="ExpenseWatch">
+              <ExpenseApp />
+            </ToolAccessGate>
+          )}
+        </Route>
+
+        <Route path="/expense">
+          {() => (
+            <ToolAccessGate tool="ExpenseWatch">
+              <ExpenseApp />
             </ToolAccessGate>
           )}
         </Route>
@@ -162,7 +198,7 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public landing page — always stays public */}
+      {/* Public landing page â€” always stays public */}
 <Route path="/">
   {() => (
     <div className="min-h-screen bg-slate-50">
@@ -301,3 +337,5 @@ function App() {
   );
 }
 export default App;
+
+

@@ -168,16 +168,21 @@ export function BillCard({ bill, onMarkAsPaid, onSetReminder, onPayNow, onSnooze
   const isOverdue = bill.status === "overdue" || daysUntilDue < 0;
 
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't navigate if clicking on buttons or dropdowns
-    if ((e.target as HTMLElement).closest('button, [role="menuitem"], input[type="file"]')) {
+    const target = e.target as HTMLElement;
+    // Let card controls perform their own actions
+    if (
+      target.closest(
+        'button, [role="button"], [role="menuitem"], [role="menu"], input, a'
+      )
+    ) {
       return;
     }
-    setLocation(`/bill/${bill.id}`);
+    setLocation(`/bills/bill/${bill.id}`);
   };
 
   return (
     <div 
-      className={`bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${borderClass} ${isPaid ? 'opacity-75' : ''}`}
+      className={`bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer touch-manipulation select-none ${borderClass} ${isPaid ? 'opacity-75' : ''}`}
       data-testid={`bill-card-${bill.id}`}
       onClick={handleCardClick}
     >

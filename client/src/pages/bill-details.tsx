@@ -18,7 +18,7 @@ import { useCustomCategories } from "@/hooks/useCategories";
 import type { Bill } from "@shared/schema";
 
 export function BillDetails() {
-  const [match, params] = useRoute("/bill/:id");
+  const [match, params] = useRoute("/bills/bill/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -27,7 +27,7 @@ export function BillDetails() {
   const { data: customCategories = [] } = useCustomCategories(userId);
   
   if (!match || !params?.id) {
-    setLocation("/app");
+    setLocation("/bills");
     return null;
   }
 
@@ -163,7 +163,7 @@ export function BillDetails() {
         title: "Bill deleted",
         description: "Bill has been deleted successfully.",
       });
-      setLocation("/app");
+      setLocation("/bills");
     },
     onError: (error) => {
       console.error("Error deleting bill:", error);
@@ -205,7 +205,7 @@ export function BillDetails() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Bill not found</h2>
-            <Button onClick={() => setLocation("/app")} data-testid="button-back-home">
+            <Button onClick={() => setLocation("/bills")} data-testid="button-back-home">
               Back to Home
             </Button>
           </div>
@@ -223,7 +223,7 @@ export function BillDetails() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setLocation("/app")}
+              onClick={() => setLocation("/bills")}
               className="p-2 mr-2"
               data-testid="button-back"
             >
@@ -568,7 +568,7 @@ export function BillDetails() {
               <div className="flex space-x-3">
                 <Button
                   variant="outline"
-                  onClick={() => setLocation("/app")}
+                  onClick={() => setLocation("/bills")}
                   data-testid="button-back-bottom"
                 >
                   <ArrowLeft className="h-4 w-4 mr-1" />

@@ -5,11 +5,6 @@ const MEMBERSHIP_API_URL = (
 
 const TOOL_NAME = "BillWatch";
 
-const ADMIN_EMAILS = [
-  "dtlnavigation@gmail.com",
-  "felixdguide@gmail.com",
-];
-
 type MembershipTier =
   | "control"
   | "momentum"
@@ -56,10 +51,19 @@ const membershipCache = new Map<
 const CACHE_TTL = 5 * 60 * 1000;
 
 export function isAdminEmail(
-  email: string,
+  email: string | null | undefined,
 ): boolean {
-  return ADMIN_EMAILS.includes(
-    email.toLowerCase(),
+  if (!email) {
+    return false;
+  }
+
+  const admins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+
+  return admins.includes(
+    email.trim().toLowerCase(),
   );
 }
 

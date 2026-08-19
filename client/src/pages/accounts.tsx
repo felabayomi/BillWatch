@@ -28,6 +28,8 @@ const typeColors: Record<string, string> = {
   other: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
 };
 
+const normalizeAccountName = (value?: string | null) => (value ?? "").trim().toLowerCase();
+
 export default function Accounts() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -95,7 +97,7 @@ export default function Accounts() {
 
   const handleImportAccount = (accountName: string, accountType: string) => {
     const alreadyExists = userAccounts.some(
-      (a) => a.name.toLowerCase() === accountName.toLowerCase()
+      (a) => normalizeAccountName(a.name) === normalizeAccountName(accountName)
     );
     if (alreadyExists) {
       toast({ title: "Already added", description: `"${accountName}" is already in your accounts.` });
@@ -106,7 +108,9 @@ export default function Accounts() {
 
   const handleImportAll = () => {
     const unimported = fwAccounts.filter(
-      (fw) => !userAccounts.some((a) => a.name.toLowerCase() === fw.name.toLowerCase())
+      (fw) => !userAccounts.some(
+        (a) => normalizeAccountName(a.name) === normalizeAccountName(fw.name)
+      )
     );
     if (unimported.length === 0) {
       toast({ title: "All accounts already imported" });
@@ -118,12 +122,14 @@ export default function Accounts() {
   };
 
   const fwAccounts: Array<{ name: string; type: string }> = (financeWatchData?.accounts || []).map((a: any) => ({
-    name: typeof a === "string" ? a : (a.name || a.accountName || ""),
+    name: (typeof a === "string" ? a : (a.name || a.accountName || "")).trim(),
     type: typeof a === "string" ? "checking" : (a.type || "checking"),
   })).filter((a: any) => a.name.trim());
 
   const unimportedCount = fwAccounts.filter(
-    (fw) => !userAccounts.some((a) => a.name.toLowerCase() === fw.name.toLowerCase())
+    (fw) => !userAccounts.some(
+      (a) => normalizeAccountName(a.name) === normalizeAccountName(fw.name)
+    )
   ).length;
 
   return (
@@ -305,7 +311,7 @@ export default function Accounts() {
                   <div className="space-y-2">
                     {fwAccounts.filter((fw) => fw.name.toLowerCase().includes(fwSearch.toLowerCase())).map((fwAcc, idx) => {
                       const alreadyImported = userAccounts.some(
-                        (a) => a.name.toLowerCase() === fwAcc.name.toLowerCase()
+                        (a) => normalizeAccountName(a.name) === normalizeAccountName(fwAcc.name)
                       );
                       const Icon = typeIcons[fwAcc.type] || Wallet;
                       const colorClass = typeColors[fwAcc.type] || typeColors.other;

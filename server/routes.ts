@@ -1,7 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { createFinanceRouter } from "./financeRoutes.js";
+import { createExpenseRouter } from "./expenseRoutes.js";
+import { createIncomeRouter } from "./incomeRoutes.js";
 import { storage } from "./storage.js";
+import { storage as financeStorage } from "../apps/finance/server/storage.js";
 import { setupAuth, isAuthenticated, loadAuthenticatedUser } from "./auth.js";
 import { emailService } from "./emailService.js";
 import { insertBillSchema, updateBillSchema, updatePaymentSchema, insertReminderSchema, insertConversationSchema, insertBillPaymentSchema, updateBillPaymentSchema, users } from "../shared/schema.js";
@@ -49,6 +52,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const financeRouter = await createFinanceRouter();
 
   app.use("/api/finance", financeRouter);
+
+const expenseRouter = await createExpenseRouter();
+app.use("/api/expense", expenseRouter);
+
+const incomeRouter = await createIncomeRouter();
+
+app.use(
+  "/api/income-lift",
+  incomeRouter,
+);
 
   // Health check endpoint for production monitoring
   app.get('/api/health', (req, res) => {
@@ -380,54 +393,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/finance-watch/accounts', isAuthenticated, async (req: any, res) => {
-    try {
-      const apiUrl = process.env.FINANCE_WATCH_API_URL;
-      const apiKey = process.env.FINANCE_WATCH_API_KEY;
-      if (!apiUrl) {
-        return res.json({ accounts: [], categories: [], message: 'Finance Watch not configured' });
-      }
+  try {
+    const userId = await resolveUserId(req);
 
-      let email: string | null = null;
-      const userId = await resolveUserId(req);
-      if (userId) {
-        const user = await storage.getUser(userId);
-        email = user?.email || null;
-      }
-      if (!email) {
-        email = req.user?.claims?.email || null;
-      }
-      if (!email) {
-        const emailParam = req.query.email;
-        if (emailParam && typeof emailParam === 'string') {
-          email = emailParam;
-        }
-      }
-      if (!email) {
-        console.log('Finance Watch accounts: No user email available');
-        return res.json({ accounts: [], categories: [], message: 'User email not available' });
-      }
-
-      console.log(`Finance Watch accounts: Fetching for email ${email}`);
-      const url = `${apiUrl.replace(/\/$/, '')}/api/sync/accounts?email=${encodeURIComponent(email)}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'X-Api-Key': apiKey || '',
-        },
+    if (!userId) {
+      return res.json({
+        accounts: [],
+        categories: [],
+        message: "User not available",
       });
-
-      if (!response.ok) {
-        console.error(`Finance Watch accounts fetch failed: ${response.status}`);
-        return res.json({ accounts: [], categories: [], error: 'Failed to fetch' });
-      }
-
-      const data = await response.json();
-      res.json(data);
-    } catch (error: any) {
-      console.error('Error fetching Finance Watch accounts:', error);
-      res.json({ accounts: [], categories: [] });
     }
-  });
+
+    let financeUser = await financeStorage.getUser(userId);
+
+    if (!financeUser) {
+      const billWatchUser = await storage.getUser(userId);
+
+      if (billWatchUser?.email) {
+        financeUser = await financeStorage.getUserByEmail(
+          billWatchUser.email,
+        );
+      }
+    }
+
+    if (!financeUser) {
+      return res.json({
+        accounts: [],
+        categories: [],
+        message: "FinanceWatch user not found",
+      });
+    }
+
+    const [accounts, categories] = await Promise.all([
+      financeStorage.getAccounts(financeUser.id),
+      financeStorage.getCategories(financeUser.id),
+    ]);
+
+    return res.json({
+      accounts,
+      categories,
+    });
+  } catch (error) {
+    console.error(
+      "Error fetching internal FinanceWatch accounts:",
+      error,
+    );
+
+    return res.status(500).json({
+      accounts: [],
+      categories: [],
+      message: "Failed to fetch FinanceWatch accounts",
+    });
+  }
+});
 
   // Membership verification endpoint
   app.get("/api/membership/check", isAuthenticated, async (req: any, res) => {

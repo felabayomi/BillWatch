@@ -61,6 +61,10 @@ export default function Reports() {
 
   const { data: accounts = [], isLoading: accountsLoading } = useQuery<AccountWithBalance[]>({
     queryKey: ["/api/finance/accounts", today],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   const { data: businesses = [] } = useQuery<Business[]>({

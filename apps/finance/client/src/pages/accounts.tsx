@@ -43,6 +43,10 @@ export default function Accounts() {
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithBalance[]>({
     queryKey: ["/api/finance/accounts"],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     queryFn: async () => {
       const response = await fetch("/api/finance/accounts", {
         credentials: "include", // Include session cookies

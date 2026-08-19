@@ -27,6 +27,26 @@ export default defineConfig({
         "src"
       ),
 
+      "@expense": path.resolve(
+        import.meta.dirname,
+        "apps/expense/client/src"
+      ),
+
+      "@expense-shared": path.resolve(
+        import.meta.dirname,
+        "apps/expense/shared"
+      ),
+
+      "@income": path.resolve(
+        import.meta.dirname,
+        "apps/income/client/src"
+      ),
+
+      "@income-shared": path.resolve(
+        import.meta.dirname,
+        "apps/income/shared"
+      ),
+
       "@finance-shared": path.resolve(
         import.meta.dirname,
         "apps",

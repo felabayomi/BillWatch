@@ -9,6 +9,10 @@ export default function BalanceSheet() {
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithBalance[]>({
     queryKey: ["/api/finance/accounts", today],
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     queryFn: async () => {
       const response = await fetch(`/api/finance/accounts?date=${today}`, {
         credentials: "include",

@@ -107,7 +107,12 @@ export function Sidebar() {
        * iPhones in landscape should still use
        * the drawer instead of the desktop sidebar.
        */}
-      <div className="fixed left-0 right-0 top-14 z-[80] flex h-14 items-center border-b border-border bg-card/95 px-4 shadow-sm backdrop-blur lg:hidden">
+      <div
+        className="sticky z-[80] flex h-14 items-center border-b border-border bg-card px-4 shadow-sm md:hidden"
+        style={{
+          top: "calc(4.375rem + env(safe-area-inset-top))",
+        }}
+      >
         <Button
           type="button"
           variant="outline"
@@ -138,15 +143,16 @@ export function Sidebar() {
        * Starts BELOW both:
        *
        * Financial OS nav = 3.5rem
-       * Finance toolbar   = 3.5rem
+       * Mobile top gap   = 0.375rem
+       * Finance toolbar  = 3.5rem
        *
-       * Total = 7rem / top-28
+       * Total = 7.875rem
        */}
       {isMobileMenuOpen && (
         <button
           type="button"
           aria-label="Close FinanceWatch menu"
-          className="fixed bottom-0 left-0 right-0 top-28 z-[90] bg-slate-950/50 lg:hidden"
+          className="fixed bottom-0 left-0 right-0 top-[calc(7.875rem+env(safe-area-inset-top))] z-[90] bg-slate-950/50 lg:hidden"
           onClick={closeMobileMenu}
           data-testid="mobile-menu-overlay"
         />
@@ -177,7 +183,7 @@ export function Sidebar() {
            * Mobile drawer
            */
           isMobileMenuOpen &&
-  "fixed bottom-0 left-0 top-28 z-[100] flex bg-white shadow-2xl lg:static lg:shadow-none",
+  "fixed bottom-0 left-0 top-[calc(7.875rem+env(safe-area-inset-top))] z-[100] flex bg-white shadow-2xl lg:static lg:shadow-none",
         )}
       >
         <div className="border-b border-border p-5">

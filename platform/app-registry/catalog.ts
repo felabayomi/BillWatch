@@ -1,23 +1,23 @@
-import type { PlatformAppManifest } from "./types";
+﻿import type { PlatformAppManifest } from "./types";
 
 export const platformCatalog: PlatformAppManifest[] = [
   {
-    id: "expensewatch",
-    name: "ExpenseWatch",
-    category: "Spending",
-    basePath: "/spending",
-    launchPath: "/spending",
-    apiPrefix: "/api/spending",
-    phase: "control",
-    description:
-      "Track expenses, understand spending patterns, and stay in control of where your money goes.",
-    available: false,
-    membershipTool: "ExpenseWatch",
-    permissions: [
-      "expensewatch.view",
-      "expensewatch.manage",
-    ],
-  },
+  id: "expensewatch",
+  name: "ExpenseWatch",
+  category: "Spending",
+  basePath: "/expense",
+  launchPath: "/expense",
+  apiPrefix: "/api/expense",
+  phase: "control",
+  description:
+    "Track expenses, understand spending patterns, and stay in control of where your money goes.",
+  available: true,
+  membershipTool: "ExpenseWatch",
+  permissions: [
+    "expensewatch.view",
+    "expensewatch.manage",
+  ],
+},
 
   {
     id: "incomelift",
@@ -25,11 +25,11 @@ export const platformCatalog: PlatformAppManifest[] = [
     category: "Income",
     basePath: "/income",
     launchPath: "/income",
-    apiPrefix: "/api/income",
+    apiPrefix: "/api/income-lift",
     phase: "momentum",
     description:
       "Organize income, identify opportunities to increase cash flow, and strengthen earning power.",
-    available: false,
+    available: true,
     membershipTool: "IncomeLift",
     permissions: [
       "incomelift.view",
