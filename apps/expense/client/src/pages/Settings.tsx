@@ -66,7 +66,7 @@ export default function Settings() {
       name: "",
       label: "",
       emoji: "",
-      color: "bg-blue-100 text-blue-800",
+      color: "#3b82f6",
     },
   });
 
@@ -153,7 +153,10 @@ export default function Settings() {
     categoryForm.setValue("name", category.name);
     categoryForm.setValue("label", category.label);
     categoryForm.setValue("emoji", category.emoji);
-    categoryForm.setValue("color", category.color);
+    categoryForm.setValue(
+      "color",
+      category.color?.startsWith("#") ? category.color : "#3b82f6",
+    );
   };
 
   const handleUpdateCategory = (data: CategoryFormData) => {
@@ -418,8 +421,25 @@ export default function Settings() {
               Add Category
             </Button>
 
-            <Dialog open={isAddCategoryOpen || !!editingCategory} onOpenChange={handleCloseCategoryDialog}>
-              <DialogContent>
+            <Dialog
+              open={isAddCategoryOpen || !!editingCategory}
+              onOpenChange={(open) => {
+                if (!open) {
+                  handleCloseCategoryDialog();
+                }
+              }}
+            >
+              <DialogContent
+                className="
+                  w-[calc(100vw-1.5rem)]
+                  max-w-md
+                  max-h-[calc(100dvh-2rem)]
+                  overflow-y-auto
+                  overscroll-contain
+                  p-4
+                  sm:p-6
+                "
+              >
                 <DialogHeader>
                   <DialogTitle>
                     {editingCategory ? "Edit Category" : "Add New Category"}
@@ -479,7 +499,21 @@ export default function Settings() {
                                 maxLength={10}
                                 readOnly
                               />
-                              <div className="grid grid-cols-8 gap-1 p-2 border rounded-md bg-muted/30">
+                              <div
+                                className="
+                                  grid
+                                  grid-cols-6
+                                  sm:grid-cols-8
+                                  gap-2
+                                  p-2
+                                  border
+                                  rounded-md
+                                  bg-muted/30
+                                  max-h-44
+                                  overflow-y-auto
+                                  overscroll-contain
+                                "
+                              >
                                 {[
                                   "🏠", "🚗", "🍔", "🛍️", "✈️", "🎬", "📚", "💊", 
                                   "⚡", "💰", "🎁", "🧴", "🎨", "📱", "🏥", "🧪",
@@ -491,7 +525,7 @@ export default function Settings() {
                                     type="button"
                                     variant="ghost"
                                     size="sm"
-                                    className="h-8 w-8 p-0 hover:bg-primary/10"
+                                    className="h-10 w-full min-w-0 p-0 text-lg hover:bg-primary/10"
                                     onClick={() => field.onChange(emoji)}
                                     data-testid={`emoji-${emoji}`}
                                   >
@@ -526,7 +560,7 @@ export default function Settings() {
                         </FormItem>
                       )}
                     />
-                    <div className="flex gap-2 pt-4">
+                    <div className="sticky bottom-0 -mx-4 flex gap-2 border-t bg-background px-4 pb-1 pt-4 sm:-mx-6 sm:px-6">
                       <Button
                         type="button"
                         variant="outline"

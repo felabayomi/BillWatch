@@ -9,7 +9,7 @@ import { Label } from "@expense/components/ui/label";
 import { Textarea } from "@expense/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@expense/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@expense/components/ui/form";
-import { useCreateExpense, useUpdateDraft, useCategories } from "@expense/hooks/useExpenses";
+import { useCreateExpense, useUpdateDraft, useApproveDraft, useCategories } from "@expense/hooks/useExpenses";
 import { useQuery } from "@tanstack/react-query";
 import { insertExpenseSchema, EXPENSE_CATEGORIES, type Account } from "@expense-shared/schema";
 import { X } from "lucide-react";
@@ -32,6 +32,7 @@ interface AddExpenseModalProps {
 export function AddExpenseModal({ open, onOpenChange, initialData, draftId }: AddExpenseModalProps) {
   const createExpense = useCreateExpense();
   const updateDraft = useUpdateDraft();
+  const approveDraft = useApproveDraft();
   const { data: customCategories, isLoading: categoriesLoading } = useCategories();
   
   const { data: financeWatchData } = useQuery<{ accounts: string[], categories: string[] }>({
@@ -85,7 +86,7 @@ export function AddExpenseModal({ open, onOpenChange, initialData, draftId }: Ad
   const onSubmit = async (values: FormData) => {
     try {
       if (draftId) {
-        // Update the existing draft
+        // First save the user's reviewed/corrected values to the draft.
         await updateDraft.mutateAsync({
           id: draftId,
           data: {
@@ -94,18 +95,28 @@ export function AddExpenseModal({ open, onOpenChange, initialData, draftId }: Ad
             expenseDate: values.expenseDate,
           },
         });
+
+        // Then approve the draft.
+        // The server converts it into a permanent expense,
+        // syncs it to FinanceWatch, and removes the draft.
+        await approveDraft.mutateAsync(draftId);
       } else {
-        // Create a new expense
         await createExpense.mutateAsync({
           ...values,
           amount: values.amount.toString(),
           expenseDate: values.expenseDate,
         });
       }
+
       onOpenChange(false);
       form.reset();
     } catch (error) {
-      console.error(draftId ? "Failed to update draft:" : "Failed to create expense:", error);
+      console.error(
+        draftId
+          ? "Failed to approve scanned draft:"
+          : "Failed to create expense:",
+        error,
+      );
     }
   };
 
@@ -359,13 +370,18 @@ export function AddExpenseModal({ open, onOpenChange, initialData, draftId }: Ad
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={draftId ? updateDraft.isPending : createExpense.isPending}
+                disabled={
+                  draftId
+                    ? updateDraft.isPending || approveDraft.isPending
+                    : createExpense.isPending
+                }
                 data-testid="button-submit-expense"
               >
-                {draftId 
-                  ? (updateDraft.isPending ? "Saving..." : "Save Draft")
-                  : (createExpense.isPending ? "Adding..." : "Add Expense")
-                }
+                {draftId
+                  ? (updateDraft.isPending || approveDraft.isPending
+                    ? "Saving..."
+                    : "Approve & Add Expense")
+                  : (createExpense.isPending ? "Adding..." : "Add Expense")}
               </Button>
             </div>
           </form>

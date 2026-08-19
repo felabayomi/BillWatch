@@ -7,7 +7,27 @@ const openai = new OpenAI({
 });
 
 const ExpenseParseSchema = z.object({
-  amount: z.number().optional().transform(val => val ? Math.abs(val) : val),
+  amount: z.preprocess(
+    (value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+      if (typeof value === "number") {
+        return Math.abs(value);
+      }
+      if (typeof value === "string") {
+        const normalized = value
+          .trim()
+          .replace(/[$,\s]/g, "");
+        const parsed = Number(normalized);
+        if (Number.isFinite(parsed)) {
+          return Math.abs(parsed);
+        }
+      }
+      return value;
+    },
+    z.number().optional(),
+  ),
   description: z.string().optional(),
   category: z.string().optional(),
   merchant: z.string().optional(),

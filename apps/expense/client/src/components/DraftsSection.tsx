@@ -6,7 +6,7 @@ import { useDrafts, useApproveDraft, useDeleteDraft } from "@expense/hooks/useEx
 import { useCurrency } from "@expense/hooks/useCurrency";
 import { EXPENSE_CATEGORIES } from "@expense-shared/schema";
 import { getRelativeDateString } from "@expense/lib/timezone";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AddExpenseModal } from "./AddExpenseModal";
 
 export function DraftsSection() {
@@ -16,6 +16,18 @@ export function DraftsSection() {
   const { formatAmount } = useCurrency();
   const [editingDraft, setEditingDraft] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedDraftId = params.get("draft");
+
+    if (
+      requestedDraftId &&
+      drafts?.some((draft) => draft.id === requestedDraftId)
+    ) {
+      setEditingDraft(requestedDraftId);
+    }
+  }, [drafts]);
 
   if (isLoading) {
     return (
@@ -248,7 +260,14 @@ export function DraftsSection() {
       {editingDraft && (
         <AddExpenseModal
           open={!!editingDraft}
-          onOpenChange={(open) => !open && setEditingDraft(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingDraft(null);
+              const url = new URL(window.location.href);
+              url.searchParams.delete("draft");
+              window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+            }
+          }}
           initialData={editingDraftData}
           draftId={editingDraft}
         />

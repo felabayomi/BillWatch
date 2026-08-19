@@ -170,7 +170,7 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
                     className="w-full"
                     onClick={() => {
                       setShowSettings(false);
-                      window.location.href = "/income-history";
+                      window.location.href = "/income/income-history";
                     }}
                     data-testid="button-income-history"
                   >
@@ -182,7 +182,7 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
                     className="w-full"
                     onClick={() => {
                       setShowSettings(false);
-                      window.location.href = "/reflections";
+                      window.location.href = "/income/reflections";
                     }}
                   >
                     <BookOpen className="mr-2 h-4 w-4" />
@@ -210,7 +210,7 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
                   className="w-full"
                   onClick={() => {
                     setShowSettings(false);
-                    window.location.href = "/accounts";
+                    window.location.href = "/income/accounts";
                   }}
                 >
                   <Wallet className="mr-2 h-4 w-4" />
@@ -267,7 +267,7 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
                     className="w-full"
                     onClick={() => {
                       setShowSettings(false);
-                      window.location.href = "/faq";
+                      window.location.href = "/income/faq";
                     }}
                   >
                     View FAQ
@@ -277,7 +277,7 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
                     className="w-full"
                     onClick={() => {
                       setShowSettings(false);
-                      window.location.href = "/how-to-use";
+                      window.location.href = "/income/how-to-use";
                     }}
                   >
                     How to Use Guide
@@ -324,4 +324,6 @@ export default function UserProfile({ onViewWelcome }: UserProfileProps) {
     </>
   );
 }
+
+
 

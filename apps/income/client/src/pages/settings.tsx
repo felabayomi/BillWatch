@@ -1,4 +1,4 @@
-
+﻿
 import { Card, CardContent, CardHeader, CardTitle } from "@income/components/ui/card";
 import { Button } from "@income/components/ui/button";
 import { Settings, BookOpen, User, Shield, HelpCircle, Wallet } from "lucide-react";
@@ -43,7 +43,7 @@ export default function SettingsPage() {
               <p className="text-muted-foreground">
                 Review your past weekly insights and strategies for growth.
               </p>
-              <Button variant="outline" className="w-full" onClick={() => window.location.href = "/reflections"}>
+              <Button variant="outline" className="w-full" onClick={() => window.location.href = "/income/reflections"}>
                   View All Reflections
                 </Button>
             </CardContent>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
               <p className="text-muted-foreground">
                 Manage your deposit accounts for FinanceWatch income syncing.
               </p>
-              <Button variant="outline" className="w-full" onClick={() => window.location.href = "/accounts"}>
+              <Button variant="outline" className="w-full" onClick={() => window.location.href = "/income/accounts"}>
                 Manage Accounts
               </Button>
             </CardContent>
@@ -98,10 +98,10 @@ export default function SettingsPage() {
                 Get help, view FAQ, and contact support.
               </p>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/faq"}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/income/faq"}>
                     View FAQ
                   </Button>
-                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/how-to-use"}>
+                <Button variant="outline" className="w-full" onClick={() => window.location.href = "/income/how-to-use"}>
                     How to Use Guide
                   </Button>
               </div>
@@ -111,11 +111,12 @@ export default function SettingsPage() {
 
         <div className="mt-8 text-center">
           <a href="/income" className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-            ← Back to Home
+            â† Back to Home
           </a>
         </div>
       </div>
     </div>
   );
 }
+
 

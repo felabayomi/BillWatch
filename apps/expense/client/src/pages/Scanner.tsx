@@ -29,9 +29,19 @@ export default function Scanner() {
     setIsProcessing(true);
     
     try {
-      await scanReceipt.mutateAsync(file);
-      // Navigate back to expenses page to see the draft
-      navigate('/expense');
+      const result = await scanReceipt.mutateAsync(file);
+
+      const draftId = result?.draft?.id;
+
+      if (!draftId) {
+        throw new Error("Receipt scanned but no draft ID was returned");
+      }
+
+      // Return to ExpenseWatch and immediately open
+      // the newly-created draft for review.
+      navigate(
+        `/expense?draft=${encodeURIComponent(draftId)}`
+      );
     } catch (error) {
       console.error('Failed to scan receipt:', error);
     } finally {
