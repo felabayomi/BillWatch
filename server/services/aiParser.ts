@@ -62,10 +62,22 @@ export class AIParserService {
 
   const normalized = text.replace(/\r/g, "");
 
+  // Detect documents that represent an already-paid receipt/payment.
+  const isPaidReceipt =
+    /\b(receipt|payment receipt)\b/i.test(normalized) &&
+    /\b(amount paid|date paid|paid on|payment date)\b/i.test(normalized);
+
+  // -----------------------------
+  // Company / vendor
+  // -----------------------------
   const companyPatterns = [
     /Bill issued by:\s*([^,\n]+)/i,
     /payable to\s+([A-Za-z0-9 .&'-]+)/i,
     /\b(Potomac Edison)\b/i,
+
+    // Receipt / invoice formats
+    /(?:Merchant|Vendor|Company)\s*:??\s*([^\n]+)/i,
+    /(?:Sold by|Paid to)\s*:??\s*([^\n]+)/i,
   ];
 
   let company: string | null = null;
@@ -78,10 +90,47 @@ export class AIParserService {
     }
   }
 
+  // Stripe-style receipts often put the company near the top without
+  // explicitly labeling it "Vendor".
+  if (!company && isPaidReceipt) {
+    const lines = normalized
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const ignoredLine =
+      /^(?:---\s*page\s+\d+\s*---|page\s+\d+\s+of\s+\d+|receipt|invoice|payment receipt|amount paid|date paid|payment method|subtotal|tax|total|description|quantity|qty|unit price|price|amount|bill to)$/i;
+
+    const candidate = lines.find(
+      (line) =>
+        line.length >= 2 &&
+        line.length <= 100 &&
+        !ignoredLine.test(line) &&
+        !/^\$?\d+(?:\.\d{2})?$/.test(line) &&
+        !/^(https?:\/\/|www\.)/i.test(line) &&
+        !/^(invoice number|receipt number|date paid)\b/i.test(line)
+    );
+
+    if (candidate) {
+      company = candidate;
+    }
+  }
+
+  // -----------------------------
+  // Amount
+  // -----------------------------
   const amountPatterns = [
+    // Prefer actual amount paid on receipts.
+    /Amount Paid\s*:?\s*\$?\s*([\d,]+\.\d{2})/i,
+    /Total Paid\s*:?\s*\$?\s*([\d,]+\.\d{2})/i,
+
+    // Normal unpaid bills.
     /Amount Due(?:\s+by\s+[A-Za-z]{3}\s+\d{1,2},\s+\d{4})?\s*:?\s*\$?\s*([\d,]+\.\d{2})/i,
     /Total Current Charges\s+\$?\s*([\d,]+\.\d{2})/i,
     /Please Pay\s+\$?\s*([\d,]+\.\d{2})/i,
+
+    // Generic receipt total as a last deterministic option.
+    /\bTotal\s*:?\s*\$?\s*([\d,]+\.\d{2})/i,
   ];
 
   let amount: string | null = null;
@@ -94,33 +143,56 @@ export class AIParserService {
     }
   }
 
+  // -----------------------------
+  // Date
+  // -----------------------------
   const dueDatePatterns = [
     /Due Date\s*:?\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
     /Amount Due by\s+([A-Za-z]{3}\s+\d{1,2},\s+\d{4})/i,
+
+    // Paid receipts do not have a due date. Use the transaction/payment
+    // date as the effective date for the existing ParsedBillInfo model.
+    /Date Paid\s*:?\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
+    /Paid On\s*:?\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
+    /Payment Date\s*:?\s*([A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
   ];
 
   let dueDate: Date | null = null;
 
   for (const pattern of dueDatePatterns) {
     const match = normalized.match(pattern);
+
     if (match?.[1]) {
       dueDate = this.parseLocalDate(match[1]);
       if (dueDate) break;
     }
   }
 
-  const accountMatch =
-    normalized.match(
-      /Account Number\s*:?\s*([0-9][0-9\s-]{4,})/i
-    );
+  // -----------------------------
+  // Account / invoice identifier
+  // -----------------------------
+  const accountPatterns = [
+    /Account Number\s*:?\s*([A-Za-z0-9][A-Za-z0-9\s-]{3,})/i,
+    /Invoice(?:\s+Number)?\s*:?\s*([A-Za-z0-9_-]+)/i,
+    /Receipt(?:\s+Number)?\s*:?\s*([A-Za-z0-9_-]+)/i,
+  ];
 
-  const accountNumber = accountMatch?.[1]
-    ? accountMatch[1].trim().replace(/\s+/g, " ")
-    : null;
+  let accountNumber: string | null = null;
 
-  if (!company && !amount && !dueDate && !accountNumber) {
+  for (const pattern of accountPatterns) {
+    const match = normalized.match(pattern);
+
+    if (match?.[1]) {
+      accountNumber = match[1].trim().replace(/\s+/g, " ");
+      break;
+    }
+  }
+
+  if (!company && !amount && !dueDate) {
     return null;
   }
+
+  const hasCoreFields = Boolean(company && amount && dueDate);
 
   return {
     company,
@@ -128,17 +200,26 @@ export class AIParserService {
     amount,
     minimumPayment: null,
     dueDate,
-    category: "Utilities",
+
+    // Do NOT classify every deterministic document as Utilities.
+    category: isPaidReceipt ? null : "Utilities",
+
     description: company
-      ? `${company} utility bill`
-      : "Utility bill",
-    confidence:
-      company && amount && dueDate
-        ? 0.95
-        : 0.7,
+      ? isPaidReceipt
+        ? `${company} paid receipt`
+        : `${company} bill`
+      : isPaidReceipt
+        ? "Paid receipt"
+        : "Bill",
+
+    confidence: hasCoreFields ? 0.95 : 0.7,
+
     payeeAddress: null,
-    isRecurring: true,
-    recurringType: "monthly",
+
+    // A receipt alone is not evidence that something is recurring.
+    isRecurring: isPaidReceipt ? false : true,
+    recurringType: isPaidReceipt ? null : "monthly",
+
     installments: null,
     totalInstallments: null,
     originalAmount: null,
@@ -160,20 +241,81 @@ export class AIParserService {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
   }
 
-  private splitDocumentSections(extractedDocument: string): Array<{ name: string; text: string }> {
-    const document = extractedDocument.replace(/\r\n/g, "\n").trim();
+  private splitDocumentSections(
+    extractedDocument: string
+  ): Array<{ name: string; text: string }> {
+    const document = extractedDocument
+      .replace(/\r\n/g, "\n")
+      .trim();
+
     if (!document) {
       return [];
     }
 
-    const segments = document.split(/(?=\n===\s*FILE\b|\n---\s*PAGE\b|\n\s*---\s*PAGE\b)/i);
-    if (segments.length > 1) {
-      return segments
-        .map((segment, index) => ({ name: `section-${index + 1}`, text: segment.trim() }))
+    /*
+     * IMPORTANT:
+     * PAGE markers are OCR/PDF metadata, NOT bill boundaries.
+     *
+     * One bill may span several pages. Splitting on "--- PAGE 1 ---"
+     * causes each page to be parsed independently and can create
+     * duplicate/partial bills.
+     *
+     * Only explicit FILE boundaries represent independently uploaded
+     * documents.
+     */
+    const fileSegments = document.split(
+      /(?=\n?===\s*FILE\b)/i
+    );
+
+    if (fileSegments.length > 1) {
+      return fileSegments
+        .map((segment, index) => ({
+          name: `file-${index + 1}`,
+          text: segment.trim(),
+        }))
         .filter((segment) => segment.text.length > 0);
     }
 
-    return [{ name: "document", text: document }];
+    return [
+      {
+        name: "document",
+        text: document,
+      },
+    ];
+  }
+
+  private normalizeCompanyName(value: unknown): string | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    const company = String(value)
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (!company) {
+      return null;
+    }
+
+    // OCR/PDF structural markers are never company names.
+    const invalidCompanyPatterns = [
+      /^---\s*page\s+\d+\s*---$/i,
+      /^page\s+\d+(?:\s+of\s+\d+)?$/i,
+      /^===\s*file\b.*===?$/i,
+      /^(receipt|payment receipt|invoice|bill)$/i,
+      /^(amount paid|total paid|amount due|due date)$/i,
+    ];
+
+    if (invalidCompanyPatterns.some((pattern) => pattern.test(company))) {
+      return null;
+    }
+
+    // A value containing no letters is not a useful company name.
+    if (!/[A-Za-z]/.test(company)) {
+      return null;
+    }
+
+    return company;
   }
 
   private normalizeBill(result: any): ParsedBillInfo {
@@ -188,7 +330,7 @@ export class AIParserService {
     };
 
     const bill: ParsedBillInfo = {
-      company: result?.company || null,
+      company: this.normalizeCompanyName(result?.company),
       accountNumber: result?.accountNumber || null,
       amount: parseAmount(amountValue),
       minimumPayment: parseAmount(result?.minimumPayment ?? null),
@@ -339,14 +481,21 @@ export class AIParserService {
             {
               role: "system",
               content:
-                `You are parsing extracted OCR text from uploaded bills. ` +
+                `You are parsing OCR text extracted from uploaded bills, invoices, statements, and payment receipts. ` +
                 `The uploaded document may contain one bill or multiple independent bills. ` +
-                `Identify every distinct bill. Do not merge separate companies/accounts into one bill. ` +
-                `A single bill may span multiple pages, so do not assume every page is a separate bill. ` +
-                `Use issuer/company, account number, invoice number, statement period, and document headers ` +
-                `to determine bill boundaries. Return valid JSON with a top-level "bills" array. ` +
+                `Identify every genuinely distinct bill. ` +
+                `A single bill may span multiple pages. PAGE markers such as "--- PAGE 1 ---", "PAGE 1", or "Page 1 of 2" are OCR metadata and NEVER represent a company, vendor, payee, or separate bill. ` +
+                `Do not create a separate bill merely because a new page begins. ` +
+                `Only create multiple bills when the document clearly contains different companies, accounts, invoices, or independent transactions. ` +
+                `Do not create partial duplicate records from different portions of the same bill. ` +
+                `Never use PAGE markers, FILE markers, "Receipt", "Invoice", or "Bill" by themselves as the company name. ` +
+                `For receipts, identify the merchant/vendor from the document content. ` +
+                `For an already-paid receipt, use the amount paid as amount and the payment/transaction date as dueDate because the current data model requires a date. ` +
+                `A paid receipt is not automatically recurring. ` +
+                `Use issuer/company, account number, invoice number, statement period, transaction identifiers, and document headers to determine actual bill boundaries. ` +
+                `Return valid JSON with a top-level "bills" array. ` +
                 `Each item should match the ParsedBillInfo shape. ` +
-                `If a field is unknown, use null.`,
+                `If a field cannot be reliably determined, return null rather than inventing a value.`,
             },
             {
               role: "user",
@@ -366,16 +515,18 @@ export class AIParserService {
 
         const normalized = candidates
           .map((item: any) => this.normalizeBill(item))
-          .filter(
-            (item) =>
-              item &&
-              (
-                item.company ||
-                item.amount ||
-                item.description ||
-                item.dueDate
-              )
-          );
+          .filter((item) => {
+            if (!item) return false;
+            /*
+             * At review time, a realistic candidate must have a company plus
+             * at least one of amount or due date. This keeps OCR fragments out
+             * without rejecting genuine bills that are missing one field.
+             */
+            const hasCompany = Boolean(item.company);
+            const hasAmount = Boolean(item.amount || item.minimumPayment);
+            const hasDate = Boolean(item.dueDate);
+            return hasCompany && (hasAmount || hasDate);
+          });
 
         if (normalized.length > 0) {
           return normalized;

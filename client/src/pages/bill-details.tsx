@@ -86,9 +86,9 @@ export function BillDetails() {
         dueDate: formattedDate,
         category: bill.category || "",
         description: bill.description || "",
-        isRecurring: bill.isRecurring || false,
+        isRecurring: bill.isRecurring ?? false,
         recurringType: bill.recurringType || "",
-        totalInstallments: bill.totalInstallments || null,
+        totalInstallments: bill.totalInstallments ?? null,
         // Bill classification fields
         billType: bill.billType || "personal",
         businessName: bill.businessName || "",
@@ -116,7 +116,12 @@ export function BillDetails() {
         category: data.category,
         description: data.description,
         isRecurring: data.isRecurring,
-        recurringType: data.recurringType || null,
+        recurringType: data.isRecurring
+          ? data.recurringType || null
+          : null,
+        totalInstallments: data.isRecurring
+          ? data.totalInstallments ?? null
+          : null,
         billType: data.billType || "personal",
         businessName: data.billType === "business" ? data.businessName : null,
         creditorPaymentAddress: {
@@ -411,10 +416,16 @@ export function BillDetails() {
                   id="isRecurring"
                   checked={formData.isRecurring}
                   onCheckedChange={(checked) => {
-                    handleFieldChange("isRecurring", checked);
-                    if (checked && !formData.recurringType) {
-                      handleFieldChange("recurringType", "monthly");
-                    }
+                    setFormData((prev) => ({
+                      ...prev,
+                      isRecurring: checked,
+                      recurringType: checked
+                        ? prev.recurringType || "monthly"
+                        : "",
+                      totalInstallments: checked
+                        ? prev.totalInstallments
+                        : null,
+                    }));
                   }}
                   data-testid="switch-recurring"
                 />

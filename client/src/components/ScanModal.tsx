@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Camera, Image, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Camera, Image, X, Loader2, CheckCircle2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
@@ -203,7 +203,15 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/bills/filter"], exact: false });
 
       const bills = Array.isArray(data?.bills) ? data.bills : Array.isArray(data?.bill) ? data.bill : data?.bill ? [data.bill] : [];
-      setParsedBills(bills);
+      const editableBills = bills.map((bill: ParsedScanBill, index: number) => ({
+        ...bill,
+        _scanKey:
+          typeof crypto !== "undefined" &&
+          typeof crypto.randomUUID === "function"
+            ? crypto.randomUUID()
+            : `scan-${Date.now()}-${index}`,
+      }));
+      setParsedBills(editableBills);
 
       if (bills.length === 0) {
         toast({
@@ -276,14 +284,28 @@ export function ScanModal({ open, onOpenChange }: ScanModalProps) {
             const validationMessage = validateScannedBill(bill);
 
             return (
-              <div key={`${bill.company || "bill"}-${bill.amount || "amount"}-${index}`} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+              <div key={bill._scanKey || `scan-bill-${index}`} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
                   <input
                     value={bill.company || ""}
                     onChange={(event) => updateBillField(index, "company", event.target.value)}
                     className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm font-medium"
                   />
-                  <div className="rounded bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary">{installmentLabel}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="rounded bg-primary/10 px-2 py-1 text-[10px] font-medium text-primary">{installmentLabel}</div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setParsedBills((current) => current.filter((_, billIndex) => billIndex !== index));
+                      }}
+                      aria-label="Remove detected bill"
+                      className="h-8 w-8 text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-sm">

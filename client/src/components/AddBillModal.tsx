@@ -107,7 +107,8 @@ export function AddBillModal({ open, onOpenChange }: AddBillModalProps) {
           description: data.description || "",
           accountNumber: data.accountNumber || null,
           isRecurring: data.isRecurring || false,
-          recurringType: data.isRecurring ? data.recurringType : null,
+          recurringType: data.isRecurring ? (data.recurringType ?? "monthly") : null,
+          totalInstallments: data.isRecurring ? (data.totalInstallments ?? null) : null,
           billType: data.billType || "personal",
           businessName: data.billType === "business" ? data.businessName : null,
           creditorPaymentAddress: {
